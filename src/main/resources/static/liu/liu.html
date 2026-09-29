@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 仪表盘</title>
+  <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.8/css/layui.css">
+  <script src="https://cdn.staticfile.org/layui/2.6.8/layui.js"></script>
+  <style>
+    body { margin: 0; }
+
+    /* 让左侧导航栏变白色，字体变黑 */
+    .layui-side-scroll {
+      background: #ffffff !important; /* 左侧菜单背景变白 */
+    }
+
+    .layui-logo {
+      color: #333 !important; /* 标题颜色改为黑色 */
+      background: #f8f8f8; /* 可选：logo 背景淡色 */
+    }
+
+    .layui-nav {
+      background: #ffffff !important; /* 确保整个导航栏是白色 */
+    }
+
+    .layui-nav-item a {
+      color: #333 !important; /* 菜单文字颜色变黑 */
+    }
+
+    .layui-nav-item a:hover {
+      background: #f5f5f5 !important; /* 鼠标悬停时背景变灰 */
+    }
+
+    .layui-this a {
+      background: #e6e6e6 !important; /* 选中状态背景 */
+      color: #000 !important;
+    }
+
+    .header-right {
+      float: right;
+      padding: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Layui 布局 -->
+<div class="layui-layout layui-layout-admin">
+  <!-- 左侧导航栏 -->
+  <div class="layui-side">
+    <div class="layui-side-scroll">
+      <div class="layui-logo">后台管理系统</div>
+      <ul class="layui-nav layui-nav-tree">
+        <li class="layui-nav-item layui-this"><a href="#"><i class="layui-icon layui-icon-console"></i> 仪表盘</a></li>
+        <li class="layui-nav-item"><a href="#"><i class="layui-icon layui-icon-user"></i> 用户管理</a></li>
+        <li class="layui-nav-item"><a href="#"><i class="layui-icon layui-icon-list"></i> 订单管理</a></li>
+        <li class="layui-nav-item"><a href="#"><i class="layui-icon layui-icon-set"></i> 系统设置</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 右侧主内容 -->
+  <div class="layui-body">
+    <!-- 顶部工具栏 -->
+    <div class="layui-card">
+      <div class="layui-card-body">
+                <span class="layui-breadcrumb">
+                    <a href="#">首页</a>
+                    <a><cite> 仪表盘</cite></a>
+                </span>
+        <div class="header-right">
+          <i class="layui-icon layui-icon-search"></i>
+          <i class="layui-icon layui-icon-notice"></i>
+          <i class="layui-icon layui-icon-username"></i> 欢迎, 管理员
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

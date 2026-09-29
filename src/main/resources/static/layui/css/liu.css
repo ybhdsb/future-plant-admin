@@ -1,0 +1,19 @@
+.layui-side {
+    background-color: white !important; /* 侧边栏背景白色 */
+}
+
+.layui-nav .layui-nav-item {
+    background-color: white !important; /* <li> 背景白色 */
+}
+
+.layui-nav .layui-nav-item a {
+    color: black !important; /* 文字颜色黑色 */
+}
+
+.layui-nav .layui-nav-item:hover {
+    background-color: #f9f9f9 !important; /* 鼠标悬停变浅灰色 */
+}
+.layui-body {
+    background-color: #f9f9f9 !important; /* 设置为非常淡的灰白色 */
+}
+

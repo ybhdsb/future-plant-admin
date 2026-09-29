@@ -1,0 +1,59 @@
+### Build ###
+target/
+build/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### Local secrets (do not commit) ###
+src/main/resources/application-local.yml
+scripts/device-heartbeat/devices.csv
+
+### Uploaded model / dataset files ###
+uploads/
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
+
+### Logs / temp / runtime ###
+*.log
+*.tmp
+.DS_Store
+/tmp/
+tmp/
+paho*/
+**/__pycache__/
+*.pyc
+*.lck
+
+### Nested / unrelated repos ###
+src/main/resources/island/
+
+### IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.cursor/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### Misc ###
+HELP.md
+application.properties
+*.swp
+*~

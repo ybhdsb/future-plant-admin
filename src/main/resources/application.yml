@@ -1,0 +1,227 @@
+spring:
+  profiles:
+    active: dev
+    # 加载本地私密配置 application-local.yml（已 gitignore，见 application-local.yml.example）
+    include: local
+  application:
+    name: future-plant-admin
+  freemarker:
+    # 开发时关闭模板缓存，改 .ftl 后刷新页面即可生效（无需重启）
+    cache: false
+    charset: UTF-8
+    content-type: text/html
+    suffix: .ftl
+  datasource:
+    url: jdbc:mysql://localhost:3306/rail_traffic?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    username: root
+    # 真实密码写在 application-local.yml，勿提交到 Git
+    password: CHANGE_ME
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: 512MB
+      max-request-size: 2GB
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    #  quartz:
+  #    #相关属性配置
+  #    properties:
+  #      org:
+  #        quartz:
+  #          jobStore:
+  #            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+  #            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+  #            tablePrefix: QRTZ_
+  #            isClustered: true
+  #            clusterCheckinInterval: 10000
+  #            useProperties: false
+  #          threadPool:
+  #            class: org.quartz.simpl.SimpleThreadPool
+  #            threadCount: 10
+  #            threadPriority: 5
+  #            threadsInheritContextClassLoaderOfInitializingThread: true
+  #    #数据库方式
+  #    job-store-type: jdbc
+  #  quartz:
+  #    job-store-type: jdbc
+  #    jdbc:
+  #      comment-prefix: QRTZ_
+  #    properties:
+  #      org:
+  #        quartz:
+  #          threadPool:
+  #            threadCount: 5
+
+  #spring:
+  #  datasource:
+  #    url: jdbc:mysql://localhost:3306/rail_traffic?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+  #    username: root
+  #    password: root123456
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+  #  jpa:
+  #    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+  #    show-sql: true
+  #    hibernate:
+  #      ddl-auto: update
+  #  quartz:
+  #    datasource:
+  #      # 新版驱动从com.mysql.jdbc.Driver变更为com.mysql.cj.jdbc.Driver
+  #      driver-class-name: com.mysql.cj.jdbc.Driver
+  #      # 数据源需要添加时间标准和指定编码格式解决乱码 You must configure either the server or JDBC driver (via the serverTimezone configuration property) to use a more specifc time zone value if you want to utilize time zone support.
+  #      url: jdbc:mysql://localhost:3306/rail_traffic?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+  #      username: root
+  #      password: root123456
+  #      scheduler:
+  #        instancName: clusteredScheduler
+  #        instanceId: AUTO
+  #      jobStore:
+  #        class: org.quartz.impl.jdbcjobstore.JobStoreTX
+  #        driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate #StdJDBCDelegate说明支持集群
+  #        tablePrefix: QRTZ_
+  #        isClustered: true
+  #        clusterCheckinInterval: 1000
+  #        useProperties: false
+  #      threadPool:
+  #        class: org.quartz.simpl.SimpleThreadPool
+  #        threadCount: 20
+  #        threadPriority: 5
+  #spring:
+  #  datasource:
+  #    url: jdbc:mysql://localhost:3306/rail_traffic?serverTimezone=GMT&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true
+  #    username: root
+  #    password: root123456
+  #    driver-class-name: com.mysql.jdbc.Driver
+  #    type: com.alibaba.druid.pool.DruidDataSource
+  #    druid:
+  #      initialSize: 2
+  #      minIdle: 2
+  #      maxActive: 30
+  #      #StatViewServlet:
+  #      #loginUsername: admin
+  #      #loginPassword: admin
+  #  quartz:
+  #    #相关属性配置
+  #    properties:
+  #      org:
+  #        quartz:
+  #          scheduler:
+  #            instanceName: DefaultQuartzScheduler
+  #            instanceId: AUTO
+  #          jobStore:
+  #            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+  #            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+  #            tablePrefix: QRTZ_
+  #            isClustered: false
+  #            clusterCheckinInterval: 10000
+  #            useProperties: true
+  #          threadPool:
+  #            class: org.quartz.simpl.SimpleThreadPool
+  #            threadCount: 10
+  #            threadPriority: 5
+  #            threadsInheritContextClassLoaderOfInitializingThread: true
+  #          dataSource:
+  #            default:
+  #              URL: jdbc:mysql://localhost:3306/rail_traffic?characterEncoding=utf-8
+  #              user: root
+  #              password: root123456
+  #              driver: com.mysql.jdbc.Driver
+  #
+  #    #数据库方式
+  #    job-store-type: jdbc
+  #    #初始化表结构
+  #    #jdbc:
+  #    #initialize-schema: never
+ 
+server:
+  port: 8708
+
+# 模型库 / 数据集上传存储根目录（相对项目运行目录）
+# 磁盘结构：
+#   uploads/library/models/{id目录}/   模型文件
+#   uploads/library/datasets/{id目录}/ 数据集文件
+# MySQL 只存元数据（名称、归属人、大小、时间、fl_key 等），真正文件在上述目录。
+library:
+  storage-root: uploads/library
+  # 联邦服务器下载时使用的 Web 地址。请改成这台电脑的局域网 IP，不要用 localhost。
+  # 留空则依次使用 device.join-base-url，或自动探测 192.168 网卡。
+  public-base-url:
+
+# 联邦学习远程项目目录（102 上）——全部走独立 pig_project，绝不调用论文 asyn / 原 sync_fl
+# async-workdir：异步 + 生猪专项
+# sync-workdir：同步经典算法
+federated:
+  server-host: 192.168.124.102
+  server-user: hzauaiot3
+  server-password: 12345678
+  project-root: /home/hzauaiot3/lzh/pig_project
+  async-workdir: /home/hzauaiot3/lzh/pig_project/async
+  sync-workdir: /home/hzauaiot3/lzh/pig_project/sync
+  sync-port: 8810
+
+mqtt:
+  # 本机未启动 Mosquitto 时请保持 false，否则会持续 Connection refused 刷屏
+  # 真机/设备心跳联调时再改为 true
+  enabled: false
+  broker-url: tcp://localhost:1883
+  client-id-prefix: springboot-mqtt-client
+  status-topic: jetson/device/status
+  train-topic-prefix: jetson/train/
+  strategy-topic-prefix: jetson/device/strategy/
+  plant-cmd-topic-prefix: plant/cmd/
+  plant-telemetry-topic: plant/telemetry/#
+  plant-ack-topic: plant/ack/#
+  completion-timeout: 5000
+  recovery-interval: 5000
+  connection-timeout: 10
+  keep-alive-interval: 20
+
+# 未来植物原型系统
+plant:
+  default-device-key: plant-ctrl-01
+  # 真机 MQTT 联调时改为 true；Mock 开发保持 false，避免无 Broker 时刷屏
+  mqtt:
+    enabled: false
+  mock:
+    enabled: true
+    interval-ms: 5000
+  media-dir: uploads/plant
+  export-max-rows: 100000
+
+device:
+  offline-timeout-seconds: 30
+  offline-check-interval-ms: 10000
+  # 设备默认固定坐标（华中农业大学实验基地，未上报 GPS 时使用）
+  default-latitude: 30.475800
+  default-longitude: 114.353600
+  default-location-name: 华中农业大学实验基地
+  # 手机扫码用的公网/局域网访问地址（不要用 localhost，手机打不开）
+  # 改成你电脑当前局域网 IP，例如 http://192.168.124.8:8707
+  # 局域网地址请在 application-local.yml 覆盖
+  join-base-url: http://127.0.0.1:8707
+  # 网页新增板端设备后，自动 SSH 部署心跳脚本
+  auto-deploy-heartbeat: true
+  # 未登记设备的心跳是否自动入库（关闭可避免删除后又被心跳拉回）
+  auto-register-on-heartbeat: false
+  # 心跳脚本目录（相对项目根或绝对路径）
+  heartbeat-script-dir: scripts/device-heartbeat
+  # MQTT broker 候选地址（从设备侧依次探测可达性，兼容跨网段/VPN）
+  heartbeat-broker-hosts: 127.0.0.1
+
+robot:
+  camera:
+    port: 5000
+    capture-path: /capture
+    video-path: /video_feed
+    connect-timeout-ms: 3000
+    read-timeout-ms: 10000
+    # 账号密码写在 application-local.yml
+    username: CHANGE_ME
+    password: CHANGE_ME
+    basic-auth-enabled: false

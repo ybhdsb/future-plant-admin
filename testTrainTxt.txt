@@ -1,0 +1,2 @@
+id: 1, accuracy: 15, loss: 0.24, round time: 63
+id: 2, accuracy: 19, loss: 0.14, round time: 155

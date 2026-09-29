@@ -1,0 +1,21 @@
+# 复制本文件为 application-local.yml，再填写你的本地配置：
+#   cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+
+spring:
+  datasource:
+    username: root
+    password: YOUR_MYSQL_PASSWORD
+
+robot:
+  camera:
+    username: YOUR_CAMERA_USER
+    password: YOUR_CAMERA_PASSWORD
+
+device:
+  # 改成你电脑当前局域网 IP，手机扫码才能打开
+  join-base-url: http://192.168.x.x:8707
+  heartbeat-broker-hosts: 192.168.x.x,10.x.x.x
+
+library:
+  # 联邦服务器要从这台 Web 下载模型/数据集，必须是它能访问的局域网地址
+  public-base-url: http://192.168.x.x:8707

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备管理</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui@2.6.8/css/layui.css">
+    <script src="https://cdn.jsdelivr.net/npm/layui@2.6.8/layui.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 引入高德地图 API -->
+    <script src="https://webapi.amap.com/maps?v=2.0&key=你的高德地图API_KEY"></script>
+
+    <style>
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .device-card {
+            width: 160px;
+            height: 120px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 15px;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .device-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+
+        .device-status {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .device-label {
+            font-size: 14px;
+            color: gray;
+        }
+
+        /* 地图样式 */
+        #map-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<h2>设备管理</h2>
+
+<!-- 设备状态卡片 -->
+<div class="container">
+    <div class="device-card">
+        <img src="/static/icons/online.png" alt="在线设备" class="device-icon">
+        <div class="device-status online">84</div>
+        <div class="device-label">在线设备</div>
+    </div>
+
+    <div class="device-card">
+        <img src="/static/icons/offline.png" alt="离线设备" class="device-icon">
+        <div class="device-status offline">100</div>
+        <div class="device-label">离线设备</div>
+    </div>
+
+    <div class="device-card">
+        <img src="/static/icons/warning.png" alt="告警设备" class="device-icon">
+        <div class="device-status warning">15</div>
+        <div class="device-label">告警设备</div>
+    </div>
+
+    <div class="device-card">
+        <img src="/static/icons/total.png" alt="设备总数" class="device-icon">
+        <div class="device-status">199</div>
+        <div class="device-label">设备总数</div>
+    </div>
+</div>
+
+<!-- 地图容器 -->
+<h3>当前位置</h3>
+<div id="map-container"></div>
+
+<script>
+    $(document).ready(function() {
+        // 预留设备状态接口
+        function loadDeviceStatus() {
+            $.ajax({
+                url: "/api/get_device_status",
+                method: "GET",
+                dataType: "json",
+                success: function(response) {
+                    $(".device-card").eq(0).find(".device-status").text(response.online);
+                    $(".device-card").eq(1).find(".device-status").text(response.offline);
+                    $(".device-card").eq(2).find(".device-status").text(response.warning);
+                    $(".device-card").eq(3).find(".device-status").text(response.total);
+                },
+                error: function() {
+                    console.error("获取设备数据失败！");
+                }
+            });
+        }
+
+        // 加载设备状态
+        loadDeviceStatus();
+
+        // 初始化地图
+        var map = new AMap.Map("map-container", {
+            zoom: 15, // 放大级别
+            center: [116.397428, 39.90923] // 默认中心点（北京市）
+        });
+
+        // 获取用户当前位置
+        AMap.plugin('AMap.Geolocation', function() {
+            var geolocation = new AMap.Geolocation({
+                enableHighAccuracy: true, // 开启高精度定位
+                timeout: 10000 // 超时时间
+            });
+
+            geolocation.getCurrentPosition(function(status, result) {
+                if (status === 'complete' && result.position) {
+                    var userLocation = [result.position.lng, result.position.lat];
+
+                    // 更新地图中心点
+                    map.setCenter(userLocation);
+
+                    // 在地图上添加用户定位点
+                    var marker = new AMap.Marker({
+                        position: userLocation,
+                        map: map,
+                        icon: "https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png"
+                    });
+
+                    console.log("定位成功:", userLocation);
+                } else {
+                    console.error("定位失败:", result);
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

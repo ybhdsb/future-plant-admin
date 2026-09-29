@@ -1,0 +1,150 @@
+@import './tokens.css';
+
+.fp-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 56px;
+}
+
+.fp-page-wide {
+  max-width: 1320px;
+}
+
+.fp-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.fp-grid-2 {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 20px;
+}
+
+.fp-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.fp-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.fp-muted {
+  color: var(--fp-muted);
+}
+
+.fp-kicker {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fp-faint);
+}
+
+.fp-title {
+  margin: 8px 0 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--fp-ink);
+  line-height: 1.15;
+}
+
+.fp-subtitle {
+  margin-top: 8px;
+  color: var(--fp-muted);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  max-width: 52ch;
+}
+
+/* Shared form controls — product-native, not browser-default */
+.fp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fp-field > span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fp-faint);
+}
+.fp-input,
+.fp-select,
+.fp-textarea {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--fp-radius-sm);
+  border: 1px solid var(--fp-line-strong);
+  background: var(--fp-bg-elev);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fp-textarea {
+  height: auto;
+  min-height: 88px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+.fp-input:focus,
+.fp-select:focus,
+.fp-textarea:focus {
+  outline: none;
+  border-color: var(--fp-brand);
+  box-shadow: 0 0 0 3px var(--fp-brand-soft);
+}
+.fp-range {
+  width: 100%;
+  accent-color: var(--fp-brand);
+}
+
+.fp-divider {
+  height: 1px;
+  background: var(--fp-line);
+  border: 0;
+  margin: 0;
+}
+
+.fp-fade-enter-active,
+.fp-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fp-fade-enter-from,
+.fp-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+@media (max-width: 1100px) {
+  .fp-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .fp-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fp-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .fp-page {
+    padding: 20px 18px 40px;
+  }
+}
+
+@media (max-width: 720px) {
+  .fp-grid-4,
+  .fp-grid-3,
+  .fp-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .fp-title {
+    font-size: 22px;
+  }
+}
