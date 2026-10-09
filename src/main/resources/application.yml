@@ -185,14 +185,33 @@ mqtt:
 # 未来植物原型系统
 plant:
   default-device-key: plant-ctrl-01
-  # 真机 MQTT 联调时改为 true；Mock 开发保持 false，避免无 Broker 时刷屏
+  # 真机 MQTT 联调时改为 true；本地/演示保持 false，避免无 Broker 时刷屏
   mqtt:
     enabled: false
+  # 默认实机：不自动造假遥测/假抓拍；本地无设备时可在看板手动开 Mock，或设 plant.mock.enabled=true
   mock:
-    enabled: true
+    enabled: false
     interval-ms: 5000
   media-dir: uploads/plant
   export-max-rows: 100000
+  # 同事设备网关（如 192.168.123.103）。enabled=false 时只走本地库/Mock，不外呼
+  gateway:
+    camera:
+      enabled: false
+      base-url: http://192.168.123.103:8080/api/v1
+      api-key: ""
+      connect-timeout-ms: 3000
+      read-timeout-ms: 15000
+      default-move-duration-ms: 500
+      # 定时拍照：轮询网关 last_file 并同步预览帧到本地媒体库
+      schedule-sync-ms: 5000
+    led:
+      enabled: false
+      base-url: http://192.168.123.103:8090/api/v1
+      api-key: ""
+      rack-key: led-rack-01
+      connect-timeout-ms: 3000
+      read-timeout-ms: 10000
 
 device:
   offline-timeout-seconds: 30

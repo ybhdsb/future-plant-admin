@@ -21,8 +21,10 @@ defineProps<{
 
 <style scoped>
 .stat {
-  padding: 14px 4px 12px;
-  border-bottom: 1px solid var(--fp-line);
+  padding: 14px 16px;
+  background: var(--fp-bg-elev);
+  border: 1px solid var(--fp-line);
+  border-radius: var(--fp-radius);
 }
 .tone-brand .value {
   color: var(--fp-brand-2);
@@ -35,19 +37,20 @@ defineProps<{
 }
 .label {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   color: var(--fp-faint);
+  font-family: var(--fp-mono);
 }
 .value {
   margin-top: 10px;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.04em;
   color: var(--fp-ink);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  font-family: var(--fp-mono);
 }
 .value small {
   margin-left: 4px;
@@ -55,6 +58,7 @@ defineProps<{
   font-weight: 500;
   letter-spacing: 0;
   color: var(--fp-faint);
+  font-family: var(--fp-font);
 }
 .hint {
   margin-top: 8px;

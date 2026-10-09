@@ -10,5 +10,7 @@ import java.util.Optional;
 public interface PlantCommandLogRepository extends JpaRepository<PlantCommandLog, Long> {
     List<PlantCommandLog> findByDeviceKeyOrderByCreatedAtDesc(String deviceKey, Pageable pageable);
 
+    List<PlantCommandLog> findByDeviceKeyAndStatusOrderByCreatedAtAsc(String deviceKey, String status, Pageable pageable);
+
     Optional<PlantCommandLog> findByClientRequestId(String clientRequestId);
 }

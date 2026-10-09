@@ -100,18 +100,18 @@ onMounted(load)
 .ok { color: var(--fp-ok); font-size: 13px; font-weight: 600; }
 .sel {
   height: 32px; border-radius: 999px; border: 1px solid var(--fp-line);
-  padding: 0 12px; background: #fff; font-size: 12px; font-weight: 600;
+  padding: 0 12px; background: var(--fp-bg-elev); font-size: 12px; font-weight: 600;
 }
 .table-wrap { overflow: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--fp-line); }
-th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fp-muted); background: #f7fbf9; }
+th { font-size: 11px; font-weight: 500; color: var(--fp-faint); background: var(--fp-bg-soft); }
 .badge {
-  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  display: inline-block; padding: 2px 6px; border-radius: var(--fp-radius-sm);
   background: var(--fp-brand-soft); color: var(--fp-brand-2); font-size: 11px; font-weight: 700;
 }
-.badge[data-s='DONE'], .badge[data-s='SUCCESS'] { background: #ecfdf5; color: #047857; }
-.badge[data-s='FAILED'], .badge[data-s='ERROR'] { background: #fef2f2; color: #b91c1c; }
+.badge[data-s='DONE'], .badge[data-s='SUCCESS'] { background: rgba(46, 196, 167, 0.08); color: var(--fp-ok); }
+.badge[data-s='FAILED'], .badge[data-s='ERROR'] { background: rgba(240, 113, 103, 0.08); color: #b91c1c; }
 .ops { display: flex; gap: 6px; }
 .empty { color: var(--fp-faint); text-align: center; }
 </style>

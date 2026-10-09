@@ -20,11 +20,11 @@
         <div class="fp-hero-aside">
             <div class="fp-status-row">
                 <span class="fp-pill danger" id="onlinePill"><span class="fp-dot"></span>离线</span>
-                <span class="fp-pill info" id="modePill">Mock 模式</span>
+                <span class="fp-pill info" id="modePill">实机模式</span>
                 <span class="fp-pill neutral" id="freshPill">数据新鲜度 --</span>
             </div>
             <div class="fp-toolbar">
-                <label class="fp-switch"><input type="checkbox" id="mockToggle" checked> 使用 Mock</label>
+                <label class="fp-switch"><input type="checkbox" id="mockToggle"> 使用 Mock</label>
                 <button class="fp-btn secondary" id="btnRefresh">刷新</button>
                 <a class="fp-btn" href="/plant/control/led">去控制</a>
             </div>

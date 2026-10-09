@@ -54,7 +54,7 @@ const chartOption = computed(() => {
     series: keys.map((k, idx) => ({
       name: LABELS[k].name,
       type: 'line',
-      smooth: 0.35,
+      smooth: 0.28,
       showSymbol: false,
       lineStyle: { width: 2 },
       data: (seriesMap[k] || []).map((p: any) => [p.sampledAt, p.value]),
@@ -82,6 +82,9 @@ async function load() {
   try {
     err.value = ''
     dash.value = await getDashboard(DEVICE_KEY)
+    if (dash.value && dash.value.mockEnabled == null) {
+      dash.value.mockEnabled = false
+    }
   } catch (e: any) {
     err.value = e?.message || '加载失败'
   } finally {
@@ -107,13 +110,13 @@ onUnmounted(() => {
 <template>
   <div class="fp-page">
     <FpPageHeader
-      kicker="Operations"
+      kicker="Live Deck"
       title="运行看板"
-      subtitle="控制器状态、关键环境测点与近时趋势。"
+      subtitle="温室控制器实时态势 · 关键测点 · 近时趋势。"
     >
       <template #actions>
         <span class="status" :class="dash?.online ? 'is-on' : 'is-off'">
-          <i />{{ dash?.online ? '控制器在线' : '控制器离线' }}
+          <i />{{ dash?.online ? 'LIVE' : 'OFFLINE' }}
         </span>
         <span class="meta">{{ freshText }}</span>
         <label class="mock">
@@ -128,30 +131,13 @@ onUnmounted(() => {
     <p v-if="err" class="err">{{ err }}</p>
 
     <div class="fp-stack">
-      <section class="hero">
-        <div class="hero-kpis">
-          <FpStatCard
-            label="测点"
-            :value="dash?.summary?.metricCount ?? 0"
-            hint="已接入指标"
-            tone="brand"
-          />
-          <FpStatCard label="LED" :value="`${dash?.summary?.ledOnCount ?? 0}/8`" hint="通道开启" />
-          <FpStatCard
-            label="泵"
-            :value="dash?.summary?.pumpOnCount ?? 0"
-            hint="水泵 / 氧泵"
-            tone="ok"
-          />
-          <FpStatCard
-            label="今日指令"
-            :value="dash?.summary?.commandCount ?? 0"
-            hint="日志条数"
-            tone="warn"
-          />
+      <section class="stage">
+        <div class="stage-head">
+          <span class="stage-tag">PRIMARY TELEMETRY</span>
+          <span class="stage-live"><em />实时采样</span>
         </div>
-        <div class="hero-metrics">
-          <div v-for="k in HERO_KEYS" :key="k" class="metric">
+        <div class="metrics-strip">
+          <div v-for="(k, idx) in HERO_KEYS" :key="k" class="metric" :style="{ '--i': idx }">
             <div class="m-label">{{ LABELS[k].name }}</div>
             <div class="m-value">
               {{ metricOf(k)?.value == null ? '—' : metricOf(k).value }}
@@ -164,13 +150,35 @@ onUnmounted(() => {
         </div>
       </section>
 
+      <div class="kpi-row">
+        <FpStatCard
+          label="测点"
+          :value="dash?.summary?.metricCount ?? 0"
+          hint="已接入指标"
+          tone="brand"
+        />
+        <FpStatCard label="LED" :value="`${dash?.summary?.ledOnCount ?? 0}/8`" hint="通道开启" />
+        <FpStatCard
+          label="泵"
+          :value="dash?.summary?.pumpOnCount ?? 0"
+          hint="水泵 / 氧泵"
+          tone="ok"
+        />
+        <FpStatCard
+          label="今日指令"
+          :value="dash?.summary?.commandCount ?? 0"
+          hint="日志条数"
+          tone="warn"
+        />
+      </div>
+
       <div class="fp-grid-2">
-        <FpPanel title="近 6 小时趋势" desc="温度 · 湿度 · pH · EC">
+        <FpPanel title="近 6 小时趋势" desc="TEMP · RH · pH · EC">
           <FpChart :option="chartOption" height="300px" />
         </FpPanel>
 
         <div class="side-col">
-          <FpPanel title="次要测点" desc="CO₂ · 溶氧 · 液位">
+          <FpPanel title="次要测点" desc="CO₂ · DO · LEVEL">
             <div class="mini-metrics">
               <div v-for="k in MORE_KEYS" :key="k" class="mini">
                 <span>{{ LABELS[k].name }}</span>
@@ -182,22 +190,23 @@ onUnmounted(() => {
             </div>
           </FpPanel>
 
-          <FpPanel title="执行器" desc="当前开关摘要">
-            <div class="chips">
-              <span
-                v-for="a in dash?.actuators || []"
-                :key="a.actuatorId"
-                class="chip"
-                :class="{ on: !!a.state?.on }"
-              >
-                {{ a.actuatorId }}
-                <em>{{ a.state?.on ? 'ON' : 'OFF' }}</em>
-              </span>
-              <span v-if="!(dash?.actuators || []).length" class="empty">暂无状态</span>
-            </div>
+          <FpPanel title="执行器" desc="ACTUATORS">
+            <table class="act-table">
+              <tbody>
+                <tr v-for="a in dash?.actuators || []" :key="a.actuatorId">
+                  <td class="id">{{ a.actuatorId }}</td>
+                  <td class="st" :class="{ on: !!a.state?.on }">
+                    {{ a.state?.on ? 'ON' : 'OFF' }}
+                  </td>
+                </tr>
+                <tr v-if="!(dash?.actuators || []).length">
+                  <td colspan="2" class="empty">暂无状态</td>
+                </tr>
+              </tbody>
+            </table>
           </FpPanel>
 
-          <FpPanel title="最近事件" desc="指令与告警">
+          <FpPanel title="最近事件" desc="EVENTS">
             <ul class="list">
               <li v-for="c in (dash?.recentCommands || []).slice(0, 4)" :key="c.commandId || c.id">
                 <div>
@@ -233,11 +242,13 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
+  height: 30px;
   padding: 0 12px;
   border-radius: var(--fp-radius-sm);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  font-family: var(--fp-mono);
   border: 1px solid var(--fp-line-strong);
   background: var(--fp-bg-elev);
   color: var(--fp-muted);
@@ -269,76 +280,116 @@ onUnmounted(() => {
   font-weight: 500;
   color: var(--fp-faint);
   font-variant-numeric: tabular-nums;
+  font-family: var(--fp-mono);
 }
 .mock {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--fp-muted);
 }
-.hero {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 28px;
-  padding: 8px 0 4px;
+.stage {
+  position: relative;
+  border: 1px solid var(--fp-line);
+  border-radius: var(--fp-radius-xl);
+  background: var(--fp-bg-elev);
+  box-shadow: var(--fp-shadow);
+  overflow: hidden;
 }
-.hero-kpis {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 24px;
+.stage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px 0;
 }
-.hero-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px 28px;
-  padding: 8px 0 8px 28px;
-  border-left: 1px solid var(--fp-line);
-}
-.metric .m-label {
-  font-size: 11px;
+.stage-tag {
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--fp-faint);
+  letter-spacing: 0.14em;
+  color: var(--fp-brand);
+  font-family: var(--fp-mono);
 }
-.metric .m-value {
-  margin-top: 8px;
-  font-size: 32px;
+.stage-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--fp-muted);
+  font-family: var(--fp-mono);
+}
+.stage-live em {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fp-brand);
+  font-style: normal;
+}
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.metric {
+  padding: 16px 20px 20px;
+  border-right: 1px solid var(--fp-line);
+}
+.metric:last-child {
+  border-right: 0;
+}
+.m-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--fp-faint);
+  font-family: var(--fp-mono);
+}
+.m-value {
+  margin-top: 12px;
+  font-size: 34px;
   font-weight: 600;
   letter-spacing: -0.045em;
   font-variant-numeric: tabular-nums;
+  font-family: var(--fp-mono);
   line-height: 1;
+  color: var(--fp-ink);
 }
-.metric .m-value small {
+.m-value small {
   margin-left: 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--fp-faint);
   letter-spacing: 0;
+  font-family: var(--fp-font);
 }
-.metric .m-hint {
-  margin-top: 8px;
+.m-hint {
+  margin-top: 12px;
   font-size: 11px;
   color: var(--fp-faint);
+  font-family: var(--fp-mono);
+}
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 .side-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 .mini-metrics {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 .mini {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  padding-bottom: 10px;
+  padding: 10px 0;
   border-bottom: 1px solid var(--fp-line);
   font-size: 13px;
   color: var(--fp-muted);
@@ -347,48 +398,51 @@ onUnmounted(() => {
   border-bottom: 0;
   padding-bottom: 0;
 }
+.mini:first-child {
+  padding-top: 0;
+}
 .mini b {
   font-size: 16px;
   font-weight: 600;
   color: var(--fp-ink);
   font-variant-numeric: tabular-nums;
+  font-family: var(--fp-mono);
 }
 .mini small {
   margin-left: 3px;
   font-size: 11px;
   font-weight: 500;
   color: var(--fp-faint);
+  font-family: var(--fp-font);
 }
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.act-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
 }
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: var(--fp-radius-sm);
+.act-table td {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--fp-line);
+}
+.act-table tr:last-child td {
+  border-bottom: 0;
+}
+.act-table .id {
+  color: var(--fp-ink-2);
+  font-weight: 500;
+  font-family: var(--fp-mono);
+  font-size: 12px;
+}
+.act-table .st {
+  text-align: right;
+  font-family: var(--fp-mono);
   font-size: 11px;
   font-weight: 600;
-  color: var(--fp-muted);
-  background: var(--fp-bg-soft);
-  border: 1px solid var(--fp-line);
-}
-.chip em {
-  font-style: normal;
-  font-size: 10px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   color: var(--fp-faint);
 }
-.chip.on {
+.act-table .st.on {
   color: var(--fp-brand-2);
-  background: var(--fp-brand-soft);
-  border-color: rgba(10, 122, 110, 0.2);
-}
-.chip.on em {
-  color: var(--fp-brand);
 }
 .list {
   list-style: none;
@@ -406,7 +460,7 @@ onUnmounted(() => {
 }
 .msg {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--fp-ink-2);
 }
 .t {
@@ -414,6 +468,7 @@ onUnmounted(() => {
   color: var(--fp-faint);
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
+  font-family: var(--fp-mono);
   white-space: nowrap;
 }
 .empty {
@@ -421,14 +476,22 @@ onUnmounted(() => {
   font-size: 13px;
 }
 @media (max-width: 960px) {
-  .hero {
-    grid-template-columns: 1fr;
+  .kpi-row,
+  .metrics-strip {
+    grid-template-columns: 1fr 1fr;
   }
-  .hero-metrics {
-    padding-left: 0;
-    border-left: 0;
-    border-top: 1px solid var(--fp-line);
-    padding-top: 18px;
+  .metric {
+    border-right: 0;
+    border-bottom: 1px solid var(--fp-line);
+  }
+  .m-value {
+    font-size: 32px;
+  }
+}
+@media (max-width: 560px) {
+  .kpi-row,
+  .metrics-strip {
+    grid-template-columns: 1fr;
   }
 }
 </style>

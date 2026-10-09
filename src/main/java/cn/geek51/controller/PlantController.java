@@ -3,6 +3,8 @@ package cn.geek51.controller;
 import cn.geek51.domain.plant.PlantMediaAsset;
 import cn.geek51.service.plant.PlantActuatorCatalog;
 import cn.geek51.service.plant.PlantAutomationService;
+import cn.geek51.service.plant.PlantCameraHardwareService;
+import cn.geek51.service.plant.PlantLedHardwareService;
 import cn.geek51.service.plant.PlantLedScheduleService;
 import cn.geek51.service.plant.PlantPhenotypeService;
 import cn.geek51.service.plant.PlantService;
@@ -33,15 +35,21 @@ public class PlantController {
     private final PlantLedScheduleService ledScheduleService;
     private final PlantAutomationService automationService;
     private final PlantPhenotypeService phenotypeService;
+    private final PlantLedHardwareService ledHardwareService;
+    private final PlantCameraHardwareService cameraHardwareService;
 
     public PlantController(PlantService plantService,
                            PlantLedScheduleService ledScheduleService,
                            PlantAutomationService automationService,
-                           PlantPhenotypeService phenotypeService) {
+                           PlantPhenotypeService phenotypeService,
+                           PlantLedHardwareService ledHardwareService,
+                           PlantCameraHardwareService cameraHardwareService) {
         this.plantService = plantService;
         this.ledScheduleService = ledScheduleService;
         this.automationService = automationService;
         this.phenotypeService = phenotypeService;
+        this.ledHardwareService = ledHardwareService;
+        this.cameraHardwareService = cameraHardwareService;
     }
 
     // ---------- pages ----------
@@ -167,10 +175,21 @@ public class PlantController {
             return ok(plantService.issueCommand(body));
         } catch (IllegalArgumentException e) {
             return fail(40001, e.getMessage());
+        } catch (IllegalStateException e) {
+            // 网关/设备侧预期失败：只回消息，不刷整段堆栈
+            return fail(50002, e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             return fail(50002, e.getMessage());
         }
+    }
+
+    /** 边缘轮询待执行指令（须写在 {commandId} 之前，避免被当成 id） */
+    @GetMapping("/api/commands/pending")
+    @ResponseBody
+    public Map<String, Object> apiPendingCommands(@RequestParam(value = "deviceKey", required = false) String deviceKey,
+                                                  @RequestParam(value = "limit", defaultValue = "10") int limit) {
+        return ok(plantService.pollPendingCommands(deviceKey, limit));
     }
 
     @GetMapping("/api/commands/{commandId}")
@@ -191,6 +210,235 @@ public class PlantController {
     public Map<String, Object> apiListCommands(@RequestParam(value = "deviceKey", required = false) String deviceKey,
                                                @RequestParam(value = "limit", defaultValue = "20") int limit) {
         return ok(plantService.listCommands(deviceKey, limit));
+    }
+
+    @GetMapping("/api/strategy")
+    @ResponseBody
+    public Map<String, Object> apiGetStrategy(@RequestParam(value = "deviceKey", required = false) String deviceKey,
+                                              @RequestParam(value = "strategyType", required = false) String strategyType) {
+        return ok(plantService.getSampleStrategy(deviceKey));
+    }
+
+    @PostMapping("/api/strategy")
+    @ResponseBody
+    public Map<String, Object> apiSaveStrategy(@RequestBody Map<String, Object> body) {
+        try {
+            return ok(plantService.saveSampleStrategy(body));
+        } catch (Exception e) {
+            return fail(40001, e.getMessage());
+        }
+    }
+
+    // ---------- LED 硬件（对接文档） ----------
+
+    @GetMapping("/api/led/health")
+    @ResponseBody
+    public Map<String, Object> apiLedHealth() {
+        return ok(ledHardwareService.health());
+    }
+
+    @GetMapping("/api/led/state")
+    @ResponseBody
+    public Map<String, Object> apiLedState(@RequestParam(value = "rackKey", required = false) String rackKey) {
+        return ok(ledHardwareService.getState(rackKey));
+    }
+
+    @PostMapping("/api/led/set")
+    @ResponseBody
+    public Map<String, Object> apiLedSet(@RequestBody Map<String, Object> body) {
+        try {
+            return ok(ledHardwareService.setSingle(body));
+        } catch (IllegalArgumentException e) {
+            return fail(40001, e.getMessage());
+        } catch (IllegalStateException e) {
+            return fail(50002, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/led/read")
+    @ResponseBody
+    public Map<String, Object> apiLedRead(@RequestParam(value = "rackKey", required = false) String rackKey,
+                                          @RequestParam("busAddress") String busAddress) {
+        try {
+            return ok(ledHardwareService.readSingle(rackKey, busAddress));
+        } catch (IllegalStateException e) {
+            return fail(50002, e.getMessage());
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/led/broadcast/set")
+    @ResponseBody
+    public Map<String, Object> apiLedBroadcast(@RequestBody Map<String, Object> body) {
+        try {
+            return ok(ledHardwareService.broadcastSet(body));
+        } catch (IllegalStateException e) {
+            return fail(50002, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/led/read-all")
+    @ResponseBody
+    public Map<String, Object> apiLedReadAll(@RequestParam(value = "rackKey", required = false) String rackKey) {
+        try {
+            return ok(ledHardwareService.readAll(rackKey));
+        } catch (IllegalStateException e) {
+            return fail(50002, e.getMessage());
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/led/apply")
+    @ResponseBody
+    public Map<String, Object> apiLedApply(@RequestBody Map<String, Object> body) {
+        try {
+            return ok(ledHardwareService.applyUiChannels(body));
+        } catch (IllegalStateException e) {
+            return fail(50002, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    // ---------- 摄像头硬件（对接文档） ----------
+
+    @GetMapping("/api/camera/status")
+    @ResponseBody
+    public Map<String, Object> apiCameraStatus(@RequestParam(value = "deviceKey", required = false) String deviceKey) {
+        return ok(cameraHardwareService.status(deviceKey));
+    }
+
+    @PostMapping("/api/camera/reconnect")
+    @ResponseBody
+    public Map<String, Object> apiCameraReconnect(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String deviceKey = body == null ? null : String.valueOf(body.get("deviceKey"));
+            return ok(cameraHardwareService.reconnect(deviceKey));
+        } catch (IllegalStateException e) {
+            return fail(50002, e.getMessage());
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/ptz/move")
+    @ResponseBody
+    public Map<String, Object> apiCameraPtzMove(@RequestBody Map<String, Object> body) {
+        try {
+            return ok(cameraHardwareService.ptzMove(body));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/ptz/stop")
+    @ResponseBody
+    public Map<String, Object> apiCameraPtzStop(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String deviceKey = body == null ? null : String.valueOf(body.get("deviceKey"));
+            return ok(cameraHardwareService.ptzStop(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/recording/start")
+    @ResponseBody
+    public Map<String, Object> apiCameraRecStart(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String deviceKey = body == null ? null : String.valueOf(body.get("deviceKey"));
+            return ok(cameraHardwareService.recordingStart(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/recording/stop")
+    @ResponseBody
+    public Map<String, Object> apiCameraRecStop(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String deviceKey = body == null ? null : String.valueOf(body.get("deviceKey"));
+            return ok(cameraHardwareService.recordingStop(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/camera/recording/status")
+    @ResponseBody
+    public Map<String, Object> apiCameraRecStatus(@RequestParam(value = "deviceKey", required = false) String deviceKey) {
+        try {
+            return ok(cameraHardwareService.recordingStatus(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/photos/capture")
+    @ResponseBody
+    public Map<String, Object> apiCameraCapture(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String deviceKey = body == null ? null : String.valueOf(body.get("deviceKey"));
+            return ok(cameraHardwareService.capturePhoto(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/photos/schedule/start")
+    @ResponseBody
+    public Map<String, Object> apiCameraScheduleStart(@RequestBody Map<String, Object> body) {
+        try {
+            return ok(cameraHardwareService.scheduleStart(body));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/camera/photos/schedule/stop")
+    @ResponseBody
+    public Map<String, Object> apiCameraScheduleStop(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String deviceKey = body == null ? null : String.valueOf(body.get("deviceKey"));
+            return ok(cameraHardwareService.scheduleStop(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/camera/photos/status")
+    @ResponseBody
+    public Map<String, Object> apiCameraPhotosStatus(@RequestParam(value = "deviceKey", required = false) String deviceKey) {
+        try {
+            return ok(cameraHardwareService.photosStatus(deviceKey));
+        } catch (Exception e) {
+            return fail(50002, e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/camera/preview/frame")
+    public ResponseEntity<byte[]> apiCameraPreviewFrame() {
+        try {
+            byte[] bytes = cameraHardwareService.previewFrame();
+            if (bytes == null || bytes.length == 0) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(bytes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
     }
 
     @GetMapping("/api/led/schedules")
@@ -352,13 +600,39 @@ public class PlantController {
             if (!file.exists()) {
                 return ResponseEntity.notFound().build();
             }
+            MediaType mediaType = guessMediaType(file.getName());
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
-                    .contentType(MediaType.IMAGE_JPEG)
+                    .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                    .contentLength(file.length())
+                    .contentType(mediaType)
                     .body(new FileSystemResource(file));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    private static MediaType guessMediaType(String filename) {
+        String n = filename == null ? "" : filename.toLowerCase();
+        if (n.endsWith(".mp4")) {
+            return MediaType.parseMediaType("video/mp4");
+        }
+        if (n.endsWith(".webm")) {
+            return MediaType.parseMediaType("video/webm");
+        }
+        if (n.endsWith(".mkv")) {
+            return MediaType.parseMediaType("video/x-matroska");
+        }
+        if (n.endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        }
+        if (n.endsWith(".gif")) {
+            return MediaType.IMAGE_GIF;
+        }
+        if (n.endsWith(".webp")) {
+            return MediaType.parseMediaType("image/webp");
+        }
+        return MediaType.IMAGE_JPEG;
     }
 
     @GetMapping("/api/events")

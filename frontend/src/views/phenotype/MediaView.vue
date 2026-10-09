@@ -67,7 +67,21 @@ onMounted(load)
           rel="noopener"
         >
           <div class="thumb">
-            <img v-if="mediaUrl(m)" :src="mediaUrl(m)" alt="" @error="($event.target as HTMLImageElement).style.display='none'" />
+            <video
+              v-if="String(m.modality || m.mediaType || '').toUpperCase() === 'VIDEO' && mediaUrl(m)"
+              :src="mediaUrl(m)"
+              controls
+              muted
+              playsinline
+              preload="metadata"
+              @click.stop
+            />
+            <img
+              v-else-if="mediaUrl(m)"
+              :src="mediaUrl(m)"
+              alt=""
+              @error="($event.target as HTMLImageElement).style.display='none'"
+            />
             <span class="mod">{{ m.modality || m.mediaType || 'IMG' }}</span>
           </div>
           <div class="bd">
@@ -84,15 +98,16 @@ onMounted(load)
 <style scoped>
 .sel {
   height: 32px; border-radius: 999px; border: 1px solid var(--fp-line);
-  padding: 0 12px; background: #fff; font-size: 12px; font-weight: 600;
+  padding: 0 12px; background: var(--fp-bg-elev); font-size: 12px; font-weight: 600;
 }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-.card { border: 1px solid var(--fp-line); border-radius: 14px; overflow: hidden; background: #fff; color: inherit; }
+.card { border: 1px solid var(--fp-line); border-radius: 14px; overflow: hidden; background: var(--fp-bg-elev); color: inherit; }
 .thumb {
-  position: relative; height: 120px; background: linear-gradient(160deg, #ccfbf1, #f0fdfa);
+  position: relative; height: 120px; background: #e8ece9;
   display: grid; place-items: center;
 }
-.thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.thumb img,
+.thumb video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
 .mod {
   position: relative; z-index: 1; padding: 2px 8px; border-radius: 999px;
   background: rgba(255,255,255,.9); font-size: 11px; font-weight: 800; color: var(--fp-brand-2);

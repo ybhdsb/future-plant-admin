@@ -1,0 +1,21 @@
+[Unit]
+Description=LED RS485 HTTP Gateway
+After=network.target
+
+[Service]
+Type=simple
+User=ledgateway
+Group=ledgateway
+SupplementaryGroups=dialout
+WorkingDirectory=/opt/led-gateway
+EnvironmentFile=/etc/led-gateway/led-gateway.env
+ExecStart=/opt/led-gateway/.venv/bin/python /opt/led-gateway/server.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

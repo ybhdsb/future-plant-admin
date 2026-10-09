@@ -28,6 +28,17 @@ defineProps<{
   padding: 4px 0 22px;
   margin-bottom: 8px;
   border-bottom: 1px solid var(--fp-line);
+  position: relative;
+}
+.hdr::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 72px;
+  height: 2px;
+  background: var(--fp-brand);
+  border-radius: 1px;
 }
 .main {
   min-width: 0;
@@ -38,7 +49,7 @@ defineProps<{
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
-  padding-bottom: 2px;
+  padding-bottom: 4px;
 }
 @media (max-width: 720px) {
   .hdr {

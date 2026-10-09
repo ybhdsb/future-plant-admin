@@ -39,12 +39,12 @@ withDefaults(
   cursor: not-allowed;
 }
 .is-md {
-  height: 38px;
+  height: 36px;
   padding: 0 16px;
   font-size: 13px;
 }
 .is-sm {
-  height: 32px;
+  height: 30px;
   padding: 0 12px;
   font-size: 12px;
 }
@@ -59,7 +59,7 @@ withDefaults(
   background: var(--fp-brand-2);
 }
 .is-secondary {
-  background: transparent;
+  background: var(--fp-bg-elev);
   color: var(--fp-ink-2);
   border: 1px solid var(--fp-line-strong);
 }
@@ -73,7 +73,7 @@ withDefaults(
 }
 .is-ghost:not(:disabled):hover {
   color: var(--fp-ink);
-  background: rgba(18, 45, 38, 0.04);
+  background: rgba(18, 45, 38, 0.05);
 }
 .is-danger {
   background: transparent;

@@ -17,6 +17,107 @@ export async function postCommand(body: Record<string, unknown>) {
   return unwrapPlant<Record<string, any>>(data)
 }
 
+/** LED：网关健康（串口是否已连） */
+export async function ledHealth() {
+  const { data } = await http.get('/plant/api/led/health')
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/** LED：读当前 8 路状态（真机时后端会先 read-all 同步） */
+export async function getLedState(rackKey = 'led-rack-01') {
+  const { data } = await http.get('/plant/api/led/state', { params: { rackKey } })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/** LED：前端滑条一次性下发（0-100 → 后端转 0-255，逐台 set） */
+export async function applyLedChannels(levels: Record<string, number>, rackKey = 'led-rack-01') {
+  const { data } = await http.post('/plant/api/led/apply', { rackKey, levels })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/** LED：单台设置（协议 0-255） */
+export async function ledSet(busAddress: string, ch1: number, ch2: number, rackKey = 'led-rack-01') {
+  const { data } = await http.post('/plant/api/led/set', { rackKey, busAddress, ch1, ch2 })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/** LED：读单台 */
+export async function ledRead(busAddress: string, rackKey = 'led-rack-01') {
+  const { data } = await http.get('/plant/api/led/read', { params: { rackKey, busAddress } })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/**
+ * LED：广播四台驱动器的 ch1/ch2（协议 0-255）。
+ * 注意：四台都会收到同一对 ch1/ch2，适合全灭/统一亮度，不是 8 路独立光谱。
+ */
+export async function ledBroadcastSet(ch1: number, ch2: number, rackKey = 'led-rack-01') {
+  const { data } = await http.post('/plant/api/led/broadcast/set', { rackKey, ch1, ch2 })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function ledReadAll(rackKey = 'led-rack-01') {
+  const { data } = await http.get('/plant/api/led/read-all', { params: { rackKey } })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/** 摄像头网关封装 */
+export async function cameraStatus(deviceKey = DEVICE_KEY) {
+  const { data } = await http.get('/plant/api/camera/status', { params: { deviceKey } })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraPtzMove(body: {
+  deviceKey?: string
+  direction?: string
+  action?: string
+  speed?: number
+  durationMs?: number
+}) {
+  const { data } = await http.post('/plant/api/camera/ptz/move', { deviceKey: DEVICE_KEY, ...body })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraPtzStop(deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/ptz/stop', { deviceKey })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraRecordingStart(deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/recording/start', { deviceKey })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraRecordingStop(deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/recording/stop', { deviceKey })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+/** 网关预览断开后重连摄像头 */
+export async function cameraReconnect(deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/reconnect', { deviceKey })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraCapture(deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/photos/capture', { deviceKey })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraScheduleStart(intervalSec: number, deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/photos/schedule/start', { deviceKey, intervalSec })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export async function cameraScheduleStop(deviceKey = DEVICE_KEY) {
+  const { data } = await http.post('/plant/api/camera/photos/schedule/stop', { deviceKey })
+  return unwrapPlant<Record<string, any>>(data)
+}
+
+export function cameraPreviewFrameUrl() {
+  return `/plant/api/camera/preview/frame?t=${Date.now()}`
+}
+
 export async function getCommands(deviceKey = DEVICE_KEY, limit = 30) {
   const { data } = await http.get('/plant/api/commands', { params: { deviceKey, limit } })
   return unwrapPlant<any[]>(data)
@@ -40,6 +141,15 @@ export async function setLedScheduleEnabled(id: number, enabled: boolean) {
 export async function deleteLedSchedule(id: number) {
   const { data } = await http.delete(`/plant/api/led/schedules/${id}`)
   return unwrapPlant(data)
+}
+
+/** 兼容旧名 */
+export const getCameraStatus = cameraStatus
+export const applyLedLevels = applyLedChannels
+
+export async function cameraPhotosStatus(deviceKey = DEVICE_KEY) {
+  const { data } = await http.get('/plant/api/camera/photos/status', { params: { deviceKey } })
+  return unwrapPlant<Record<string, any>>(data)
 }
 
 export async function getActuatorCatalog(includeV2 = true) {

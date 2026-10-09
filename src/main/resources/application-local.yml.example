@@ -16,6 +16,32 @@ device:
   join-base-url: http://192.168.x.x:8707
   heartbeat-broker-hosts: 192.168.x.x,10.x.x.x
 
+# 同事设备网关（192.168.123.103）起来后打开 enabled，填入 api-key
+plant:
+  mock:
+    enabled: false
+  gateway:
+    camera:
+      enabled: true
+      base-url: http://192.168.123.103:8080/api/v1
+      api-key: YOUR_CAMERA_API_KEY
+      # 停录后 SSH/SFTP 拉取录像到本机（密码仅写 local，勿提交）
+      ssh-enabled: false
+      ssh-host: 192.168.123.103
+      ssh-port: 22
+      ssh-username: YOUR_SSH_USER
+      ssh-password: YOUR_SSH_PASSWORD
+      ssh-recordings-dir: /home/hzauaiot/project/HIKVISION/recordings
+      # 网关录像多为 HEVC，需转 H.264 才能在 Chrome 播放
+      ffmpeg-path: ffmpeg
+    led:
+      enabled: true
+      base-url: http://192.168.123.103:8090/api/v1
+      api-key: YOUR_LED_API_KEY
+      rack-key: led-rack-01
+      connect-timeout-ms: 3000
+      read-timeout-ms: 15000
+
 library:
   # 联邦服务器要从这台 Web 下载模型/数据集，必须是它能访问的局域网地址
   public-base-url: http://192.168.x.x:8707

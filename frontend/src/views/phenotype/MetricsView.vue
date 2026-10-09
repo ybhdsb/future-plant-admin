@@ -105,11 +105,11 @@ onMounted(load)
 <style scoped>
 .sel {
   height: 32px; border-radius: 999px; border: 1px solid var(--fp-line);
-  padding: 0 12px; background: #fff; font-size: 12px; font-weight: 600;
+  padding: 0 12px; background: var(--fp-bg-elev); font-size: 12px; font-weight: 600;
 }
 .table-wrap { overflow: auto; max-height: 420px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--fp-line); }
-th { font-size: 11px; color: var(--fp-muted); background: #f7fbf9; }
+th { font-size: 11px; font-weight: 500; color: var(--fp-faint); background: var(--fp-bg-soft); }
 .empty { color: var(--fp-faint); text-align: center; }
 </style>

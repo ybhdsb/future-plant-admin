@@ -12,7 +12,7 @@ public class PlantMockScheduler {
 
     private final PlantService plantService;
 
-    @Value("${plant.mock.enabled:true}")
+    @Value("${plant.mock.enabled:false}")
     private boolean mockEnabled;
 
     public PlantMockScheduler(PlantService plantService) {

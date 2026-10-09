@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Linux RS485 LED 植物补光控制台">
+  <title>LED 补光控制台</title>
+  <link rel="stylesheet" href="/assets/style.css?v=1.5.1">
+  <script src="/assets/app.js?v=1.5.1" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner shell">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><div class="brand-copy"><strong>光谱控制台</strong><span>LED Gateway Console</span></div></div>
+      <div class="topbar-actions">
+        <span class="service-label" id="serverAddress"></span>
+        <button class="button button-subtle button-sm" id="keyBtn" type="button">API 密钥</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell main">
+    <section class="hero" aria-labelledby="mainTitle">
+      <div class="hero-copy">
+        <p class="eyebrow">RS485 · MODBUS RTU · LINUX</p>
+        <h1 id="mainTitle">植物补光控制</h1>
+        <p class="lead">8 台驱动器按物理两列分为 2 组（左列 0x96～0x99、右列 0x9A～0x9D），共 16 个独立可调通道。同组不自动联动；点击“应用设置”才会发送指令。</p>
+        <div class="hero-actions">
+          <button type="button" id="refreshBtn" class="button button-primary"><span aria-hidden="true">↻</span> 读取全部设备</button>
+          <span id="lastSync" class="last-sync">尚未读取设备</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="light-halo"></div>
+        <div class="lamp lamp-one"></div><div class="lamp lamp-two"></div><div class="lamp lamp-three"></div>
+        <div class="art-lines"></div>
+        <div class="art-plate">LIGHT SPECTRUM <span>16 CHANNELS</span></div>
+      </div>
+    </section>
+
+    <section class="metrics" aria-label="系统概览">
+      <div class="metric"><div class="metric-label"><span class="metric-icon">◎</span> API 服务</div><strong id="apiStatus">连接中</strong><span id="apiDetail">正在检查 HTTP 网关</span></div>
+      <div class="metric"><div class="metric-label"><span class="metric-icon">⌁</span> RS485 串口</div><strong id="serialStatus">待检查</strong><span id="serialDetail">9600 8N1 · Modbus RTU</span></div>
+      <div class="metric"><div class="metric-label"><span class="metric-icon">◉</span> 设备响应</div><strong><span id="onlineCount">—</span> <span class="metric-suffix">/ 8 台</span></strong><span id="onlineDetail">等待第一次读取</span></div>
+    </section>
+
+    <section class="section-header" aria-labelledby="devicesTitle">
+      <div><p class="eyebrow eyebrow-dark">DEVICE CONTROL</p><h2 id="devicesTitle">两组机架 · 独立调光</h2><p class="subtext">左列四台为一组、右列四台为另一组（不是按光谱两两配对）。每台设备可独立设置 CH1 和 CH2；光强值为 Modbus 协议值 0–255，页面显示的百分比只是换算值，并非实测光功率。</p></div>
+      <div class="legend"><span class="legend-dot"></span> 成功回读后才显示为已确认</div>
+    </section>
+
+    <div id="deviceGrid" class="device-grid" aria-live="off"></div>
+
+    <section class="bottom-grid">
+      <div class="panel broadcast-panel">
+        <div class="panel-heading"><div><p class="eyebrow eyebrow-dark">GROUP ACTION</p><h2>全局广播控制</h2><p class="subtext">向总线广播 CH1 / CH2 设置（目前列管 8 台）。广播无逐台应答；发送后等待 3 秒再回读，失败设备最多额外重试两轮读取。</p></div><span class="panel-glyph" aria-hidden="true">⌘</span></div>
+        <div class="broadcast-inputs">
+          <label>全部设备 CH1 <input id="broadcast1" type="number" min="0" max="255" step="1" value="20" inputmode="numeric"></label>
+          <label>全部设备 CH2 <input id="broadcast2" type="number" min="0" max="255" step="1" value="20" inputmode="numeric"></label>
+        </div>
+        <button type="button" id="broadcastCustom" class="button button-primary button-wide">广播应用指定光强</button>
+        <div class="broadcast-presets">
+          <button type="button" id="broadcastOff" class="button button-outline"><span aria-hidden="true">◯</span> 全部关闭</button>
+          <button type="button" id="broadcastOn" class="button button-outline"><span aria-hidden="true">☀</span> 全部全亮</button>
+        </div>
+        <p class="fineprint">“全部全亮”对应 ch1=255、ch2=255；“全部关闭”对应 ch1=0、ch2=0。所有广播写入前均需确认。</p>
+      </div>
+      <div class="panel log-panel">
+        <div class="panel-heading"><div><p class="eyebrow eyebrow-dark">ACTIVITY</p><h2>操作记录</h2><p class="subtext">仅保留当前网页会话的记录，不替代平台数据库日志。</p></div><button class="text-button" type="button" id="clearLog">清空</button></div>
+        <ol class="activity-list" id="activityList" aria-live="polite"><li class="activity-empty">尚无操作记录</li></ol>
+      </div>
+    </section>
+
+    <footer class="footer"><span>LED GATEWAY · 2 RACK COLUMNS / 8 DEVICES / 16 CHANNELS</span><span>数据来自设备寄存器回读 · 请在受控局域网使用</span></footer>
+  </main>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <dialog id="keyDialog" class="key-dialog" aria-labelledby="keyTitle">
+    <div class="dialog-top"><span class="dialog-badge" aria-hidden="true">⌁</span><button type="button" id="closeKey" class="dialog-close" aria-label="关闭">×</button></div>
+    <h2 id="keyTitle">连接网关</h2>
+    <p>如果网关设置了 <code>LED_API_KEY</code>，请在这里输入相同密钥。密钥只保存在当前网页的内存中，不会写入浏览器存储。</p>
+    <form id="keyForm" method="dialog">
+      <label for="keyInput">API 密钥</label>
+      <input id="keyInput" type="password" autocomplete="off" placeholder="输入 X-API-Key" spellcheck="false">
+      <p id="keyError" role="alert" class="dialog-error" hidden></p>
+      <button type="submit" class="button button-primary button-wide">连接并验证</button>
+    </form>
+  </dialog>
+</body>
+</html>

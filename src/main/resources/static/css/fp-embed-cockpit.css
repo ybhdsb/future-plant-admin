@@ -1,0 +1,332 @@
+/* Future Plant — embed cockpit skin for legacy Layui / FTL pages */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+html.fp-embed,
+body.fp-embed {
+  margin: 0 !important;
+  min-height: 100% !important;
+  background:
+    radial-gradient(900px 420px at 90% -10%, rgba(34, 211, 238, 0.1), transparent 50%),
+    radial-gradient(700px 380px at 0% 20%, rgba(46, 196, 167, 0.14), transparent 55%),
+    linear-gradient(180deg, #050d0c 0%, #071512 48%, #0a1c18 100%) !important;
+  color: #e8f3ef !important;
+  font-family: "Space Grotesk", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.fp-embed::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.5), transparent 80%);
+}
+
+body.fp-embed > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- shared page chrome ---- */
+.fp-embed .page,
+.fp-embed .device-page {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 8px 4px 32px !important;
+}
+
+.fp-embed .page-head,
+.fp-embed .head {
+  background:
+    linear-gradient(135deg, rgba(46, 196, 167, 0.1), transparent 55%),
+    rgba(13, 28, 25, 0.92) !important;
+  border: 1px solid rgba(180, 230, 210, 0.12) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  color: #e8f3ef !important;
+}
+
+.fp-embed .page-title,
+.fp-embed .title {
+  color: #f2fffb !important;
+  letter-spacing: -0.03em !important;
+  font-weight: 600 !important;
+}
+
+.fp-embed .page-subtitle,
+.fp-embed .sub,
+.fp-embed .meta,
+.fp-embed .hint,
+.fp-embed .folder-name {
+  color: #8aa39a !important;
+}
+
+.fp-embed .stat,
+.fp-embed .card,
+.fp-embed .empty,
+.fp-embed .summary-card,
+.fp-embed .device-card,
+.fp-embed .panel,
+.fp-embed .hero {
+  background:
+    linear-gradient(160deg, rgba(46, 196, 167, 0.07), transparent 45%),
+    rgba(13, 28, 25, 0.95) !important;
+  border: 1px solid rgba(180, 230, 210, 0.12) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28) !important;
+  color: #e8f3ef !important;
+}
+
+.fp-embed .stat .k,
+.fp-embed .metric span {
+  color: #5f7a71 !important;
+  font-family: "JetBrains Mono", monospace !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+}
+
+.fp-embed .stat .v,
+.fp-embed .metric b,
+.fp-embed .name {
+  color: #e8f3ef !important;
+}
+
+.fp-embed .stat .v {
+  color: #2ec4a7 !important;
+  font-family: "JetBrains Mono", monospace !important;
+  letter-spacing: -0.04em !important;
+}
+
+.fp-embed .tag {
+  background: rgba(46, 196, 167, 0.12) !important;
+  color: #2ec4a7 !important;
+  border: 1px solid rgba(46, 196, 167, 0.22) !important;
+}
+
+.fp-embed .tag.gray {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #8aa39a !important;
+  border-color: rgba(180, 230, 210, 0.12) !important;
+}
+
+.fp-embed .tag.blue {
+  background: rgba(94, 177, 239, 0.12) !important;
+  color: #5eb1ef !important;
+  border-color: rgba(94, 177, 239, 0.22) !important;
+}
+
+.fp-embed .tag.orange {
+  background: rgba(240, 180, 41, 0.12) !important;
+  color: #f0b429 !important;
+  border-color: rgba(240, 180, 41, 0.22) !important;
+}
+
+.fp-embed .metric {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border: 1px solid rgba(180, 230, 210, 0.08) !important;
+}
+
+.fp-embed .toolbar input,
+.fp-embed input[type='text'],
+.fp-embed input[type='password'],
+.fp-embed input[type='number'],
+.fp-embed select,
+.fp-embed textarea,
+.fp-embed .layui-input,
+.fp-embed .layui-textarea,
+.fp-embed .layui-select {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(180, 230, 210, 0.16) !important;
+  color: #e8f3ef !important;
+  border-radius: 8px !important;
+}
+
+.fp-embed .toolbar input::placeholder,
+.fp-embed .layui-input::placeholder {
+  color: #5f7a71 !important;
+}
+
+.fp-embed .btn,
+.fp-embed .action-btn,
+.fp-embed .a-primary,
+.fp-embed .layui-btn,
+.fp-embed .layui-btn-sm,
+.fp-embed .layui-btn-xs {
+  background: linear-gradient(180deg, #36d4b4, #1aa88e) !important;
+  color: #04140f !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 0 0 1px rgba(46, 196, 167, 0.3), 0 8px 20px rgba(26, 168, 142, 0.22) !important;
+}
+
+.fp-embed .btn.secondary,
+.fp-embed .action-btn.secondary,
+.fp-embed .a-secondary,
+.fp-embed .btn.ghost,
+.fp-embed .layui-btn-primary {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #c5d8d1 !important;
+  border: 1px solid rgba(180, 230, 210, 0.16) !important;
+  box-shadow: none !important;
+}
+
+.fp-embed .a-danger,
+.fp-embed .layui-btn-danger {
+  background: rgba(240, 113, 103, 0.14) !important;
+  color: #f07167 !important;
+  border: 1px solid rgba(240, 113, 103, 0.35) !important;
+  box-shadow: none !important;
+}
+
+.fp-embed .card:hover,
+.fp-embed .device-card:hover {
+  border-color: rgba(46, 196, 167, 0.35) !important;
+  box-shadow: 0 0 0 1px rgba(46, 196, 167, 0.12), 0 18px 40px rgba(0, 0, 0, 0.35) !important;
+  transform: translateY(-1px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* ---- Layui table (auth) ---- */
+.fp-embed .layui-table,
+.fp-embed .layui-table-view,
+.fp-embed .layui-table-header,
+.fp-embed .layui-table-body,
+.fp-embed .layui-table-box,
+.fp-embed .layui-table-tool,
+.fp-embed .layui-table-page {
+  background: transparent !important;
+  color: #e8f3ef !important;
+  border-color: rgba(180, 230, 210, 0.12) !important;
+}
+
+.fp-embed .layui-table-view {
+  border: 1px solid rgba(180, 230, 210, 0.12) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  background:
+    linear-gradient(160deg, rgba(46, 196, 167, 0.06), transparent 40%),
+    rgba(13, 28, 25, 0.95) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+.fp-embed .layui-table th,
+.fp-embed .layui-table-header,
+.fp-embed .layui-table thead tr {
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: #8aa39a !important;
+}
+
+.fp-embed .layui-table td,
+.fp-embed .layui-table th {
+  border-color: rgba(180, 230, 210, 0.08) !important;
+  color: #e8f3ef !important;
+}
+
+.fp-embed .layui-table tbody tr:hover,
+.fp-embed .layui-table-hover {
+  background: rgba(46, 196, 167, 0.08) !important;
+}
+
+.fp-embed .layui-table-tool {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-bottom: 1px solid rgba(180, 230, 210, 0.1) !important;
+}
+
+.fp-embed .layui-laypage a,
+.fp-embed .layui-laypage span {
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: #8aa39a !important;
+  border-color: rgba(180, 230, 210, 0.12) !important;
+}
+
+.fp-embed .layui-laypage .layui-laypage-curr .layui-laypage-em {
+  background: #1aa88e !important;
+}
+
+.fp-embed .layui-form-label,
+.fp-embed .layui-form-mid {
+  color: #8aa39a !important;
+}
+
+.fp-embed .layui-layer {
+  background: #0d1c19 !important;
+  color: #e8f3ef !important;
+  border: 1px solid rgba(46, 196, 167, 0.22) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.fp-embed .layui-layer-title {
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: #e8f3ef !important;
+  border-bottom: 1px solid rgba(180, 230, 210, 0.1) !important;
+}
+
+.fp-embed .layui-layer-btn a {
+  background: linear-gradient(180deg, #36d4b4, #1aa88e) !important;
+  color: #04140f !important;
+  border: 0 !important;
+}
+
+.fp-embed .layui-layer-btn .layui-layer-btn1 {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #c5d8d1 !important;
+  border: 1px solid rgba(180, 230, 210, 0.16) !important;
+}
+
+/* ---- device page specifics ---- */
+.fp-embed .summary-grid .summary-card,
+.fp-embed .device-grid .device-card {
+  background:
+    linear-gradient(160deg, rgba(34, 211, 238, 0.05), transparent 50%),
+    rgba(13, 28, 25, 0.95) !important;
+}
+
+.fp-embed .device-card .name,
+.fp-embed .device-card h3,
+.fp-embed .device-card .title {
+  color: #f2fffb !important;
+}
+
+.fp-embed .device-card .status,
+.fp-embed .pill,
+.fp-embed .badge {
+  border-radius: 6px !important;
+}
+
+/* detail pages */
+.fp-embed .hero,
+.fp-embed .panel,
+.fp-embed .tree,
+.fp-embed .timeline {
+  color: #e8f3ef !important;
+}
+
+.fp-embed a {
+  color: #2ec4a7 !important;
+}
+
+.fp-embed a:hover {
+  color: #5eead4 !important;
+}
+
+/* scrollbars */
+.fp-embed ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.fp-embed ::-webkit-scrollbar-thumb {
+  background: rgba(46, 196, 167, 0.28);
+  border-radius: 8px;
+}
+.fp-embed ::-webkit-scrollbar-track {
+  background: transparent;
+}

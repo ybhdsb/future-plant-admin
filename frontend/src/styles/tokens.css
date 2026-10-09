@@ -1,16 +1,16 @@
 :root {
-  /* Quiet botanical ops — commercial, not template */
+  /* Content: light commercial · Nav keeps its own dark palette in AppShell */
   --fp-brand: #0a7a6e;
   --fp-brand-2: #065f56;
   --fp-brand-soft: rgba(10, 122, 110, 0.09);
-  --fp-brand-glow: rgba(10, 122, 110, 0.16);
+  --fp-brand-glow: rgba(10, 122, 110, 0.14);
 
   --fp-ink: #12231f;
   --fp-ink-2: #243d37;
   --fp-muted: #5a6f68;
   --fp-faint: #8b9e96;
 
-  --fp-bg: #eef3f0;
+  --fp-bg: #f3f5f4;
   --fp-bg-elev: #ffffff;
   --fp-bg-soft: #f7faf8;
   --fp-line: rgba(18, 45, 38, 0.08);
@@ -21,19 +21,19 @@
   --fp-danger: #c2410c;
   --fp-info: #0369a1;
 
-  --fp-radius-sm: 8px;
-  --fp-radius: 12px;
-  --fp-radius-lg: 16px;
-  --fp-radius-xl: 22px;
+  --fp-radius-sm: 6px;
+  --fp-radius: 10px;
+  --fp-radius-lg: 12px;
+  --fp-radius-xl: 16px;
 
-  --fp-shadow-sm: 0 1px 0 rgba(18, 45, 38, 0.04);
+  --fp-shadow-sm: 0 1px 0 rgba(18, 45, 38, 0.03);
   --fp-shadow: 0 1px 2px rgba(18, 45, 38, 0.04), 0 8px 24px rgba(18, 45, 38, 0.04);
-  --fp-shadow-lg: 0 16px 40px rgba(18, 45, 38, 0.08);
+  --fp-shadow-lg: 0 16px 40px rgba(18, 45, 38, 0.07);
 
-  --fp-font: "Sora", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  --fp-mono: "IBM Plex Mono", "SF Mono", "Menlo", monospace;
+  --fp-font: "Space Grotesk", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --fp-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", monospace;
 
-  --fp-nav-w: 240px;
+  --fp-nav-w: 248px;
   --fp-top-h: 56px;
 }
 
@@ -52,7 +52,7 @@ body,
 
 body {
   font-family: var(--fp-font);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 400;
   color: var(--fp-ink);
   background: var(--fp-bg);
@@ -88,4 +88,16 @@ img {
 ::selection {
   background: var(--fp-brand-soft);
   color: var(--fp-brand-2);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(18, 45, 38, 0.16);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }

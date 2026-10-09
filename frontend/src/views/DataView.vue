@@ -125,12 +125,12 @@ onMounted(load)
 .filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .filters label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--fp-muted); }
 .filters input, .filters select {
-  height: 36px; border-radius: 10px; border: 1px solid var(--fp-line); padding: 0 10px; background: #fff;
+  height: 36px; border-radius: 10px; border: 1px solid var(--fp-line); padding: 0 10px; background: var(--fp-bg-elev);
 }
 .table-wrap { overflow: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--fp-line); }
-th { font-size: 11px; color: var(--fp-muted); background: #f7fbf9; }
+th { font-size: 11px; font-weight: 500; color: var(--fp-faint); background: var(--fp-bg-soft); }
 .empty { color: var(--fp-faint); text-align: center; }
 @media (max-width: 900px) { .filters { grid-template-columns: 1fr 1fr; } }
 </style>

@@ -28,9 +28,9 @@ onMounted(load)
 <template>
   <div class="fp-page fp-page-wide">
     <FpPageHeader
-      kicker="Phenotype"
+      kicker="Digital Specimen"
       title="数字化植株"
-      subtitle="表型驱动的可旋转植株；拖转单株，点击查看指标。"
+      subtitle="标本级 3D 玉米模型 · 拖转观察 · 表型参数驱动形态比例。"
     >
       <template #actions>
         <FpButton variant="secondary" size="sm" @click="load">刷新</FpButton>
@@ -38,7 +38,7 @@ onMounted(load)
     </FpPageHeader>
 
     <div class="layout">
-      <FpPanel title="植株阵列" desc="形态由株高 / 叶片数 / 生育期驱动" flush>
+      <FpPanel title="植株标本墙" desc="表型驱动的展示级 3D 玉米 · 拖转观察" flush>
         <div class="field">
           <div class="grid">
             <CornPlantCard
@@ -53,8 +53,8 @@ onMounted(load)
       </FpPanel>
 
       <FpPanel
-        :title="selected ? `${selected.plantCode} · ${selected.slotCode || ''}` : '选择植株'"
-        :desc="selected ? `${selected.cropType || '玉米'} / ${selected.variety || ''} / ${selected.growthStage || ''}` : '点击或拖转左侧植株'"
+        :title="selected ? `${selected.plantCode}` : '选择植株'"
+        :desc="selected ? `${selected.cropType || '玉米'} / ${selected.variety || '—'} / ${selected.growthStage || '—'}` : '点击卡片查看表型详情'"
       >
         <template v-if="selected">
           <div class="kv">
@@ -84,41 +84,45 @@ onMounted(load)
   gap: 20px;
 }
 .field {
-  min-height: 440px;
-  background:
-    linear-gradient(180deg, #dce8e2 0%, #c5d6c8 38%, #9fb589 38%, #7a9660 100%);
+  min-height: 520px;
+  background: var(--fp-bg-soft);
 }
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  padding: 28px 20px 20px;
+  gap: 20px 14px;
+  padding: 22px 18px 28px;
   align-items: end;
 }
-.kv { display: grid; gap: 0; font-size: 13px; }
+.kv { display: grid; gap: 0; font-size: 12.5px; }
 .kv > div {
   display: flex; justify-content: space-between; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--fp-line);
+  padding: 9px 0; border-bottom: 1px solid var(--fp-line);
 }
 .kv > div:last-child { border-bottom: 0; }
-.kv span { color: var(--fp-faint); font-weight: 500; font-size: 12px; }
-.kv b { font-weight: 600; color: var(--fp-ink); }
+.kv span { color: var(--fp-faint); font-weight: 500; font-size: 11.5px; }
+.kv b { font-weight: 600; color: var(--fp-ink); font-family: var(--fp-mono); font-size: 12.5px; }
 .chips {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 12px;
+  border-top: 1px solid var(--fp-line);
 }
 .chip {
-  padding: 12px 0 10px; border-top: 1px solid var(--fp-line);
+  padding: 12px 0 10px;
+  border-bottom: 1px solid var(--fp-line);
 }
+.chip:nth-child(odd) { padding-right: 12px; }
+.chip:nth-child(even) { padding-left: 12px; border-left: 1px solid var(--fp-line); }
 .chip .n {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--fp-faint);
+  font-size: 10.5px; font-weight: 500; color: var(--fp-faint); font-family: var(--fp-mono);
+  letter-spacing: 0.06em; text-transform: uppercase;
 }
 .chip .v {
-  font-size: 20px; font-weight: 600; letter-spacing: -0.03em;
-  color: var(--fp-ink); margin-top: 6px; font-variant-numeric: tabular-nums;
+  font-size: 18px; font-weight: 600; letter-spacing: -0.03em;
+  color: var(--fp-ink); margin-top: 5px; font-variant-numeric: tabular-nums;
+  font-family: var(--fp-mono);
 }
-.chip small { font-size: 11px; font-weight: 500; color: var(--fp-faint); }
-.empty { color: var(--fp-faint); font-size: 13px; }
+.chip small { font-size: 10.5px; font-weight: 500; color: var(--fp-faint); font-family: var(--fp-font); }
+.empty { color: var(--fp-faint); font-size: 12.5px; }
 @media (max-width: 980px) {
   .layout { grid-template-columns: 1fr; }
   .grid { grid-template-columns: repeat(2, 1fr); }

@@ -1,5 +1,6 @@
 package cn.geek51.service.plant;
 
+import cn.geek51.config.PlantGatewayProperties;
 import cn.geek51.config.PlantWebSocket;
 import cn.geek51.dao.DeviceJpaReposity;
 import cn.geek51.dao.plant.*;
@@ -43,9 +44,12 @@ public class PlantService {
     private final PlantRuntimeEventRepository eventRepository;
     private final DeviceJpaReposity deviceJpaReposity;
     private final MqttService mqttService;
+    private final PlantGatewayProperties gatewayProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private PlantAutomationService automationService;
+    private PlantCameraHardwareService cameraHardwareService;
+    private PlantLedHardwareService ledHardwareService;
 
     @Autowired
     @Lazy
@@ -53,10 +57,22 @@ public class PlantService {
         this.automationService = automationService;
     }
 
+    @Autowired
+    @Lazy
+    public void setCameraHardwareService(PlantCameraHardwareService cameraHardwareService) {
+        this.cameraHardwareService = cameraHardwareService;
+    }
+
+    @Autowired
+    @Lazy
+    public void setLedHardwareService(PlantLedHardwareService ledHardwareService) {
+        this.ledHardwareService = ledHardwareService;
+    }
+
     @Value("${plant.default-device-key:plant-ctrl-01}")
     private String defaultDeviceKey;
 
-    @Value("${plant.mock.enabled:true}")
+    @Value("${plant.mock.enabled:false}")
     private boolean mockEnabledByDefault;
 
     @Value("${plant.media-dir:uploads/plant}")
@@ -75,7 +91,8 @@ public class PlantService {
                         PlantMediaAssetRepository mediaRepository,
                         PlantRuntimeEventRepository eventRepository,
                         DeviceJpaReposity deviceJpaReposity,
-                        MqttService mqttService) {
+                        MqttService mqttService,
+                        PlantGatewayProperties gatewayProperties) {
         this.profileRepository = profileRepository;
         this.readingRepository = readingRepository;
         this.actuatorRepository = actuatorRepository;
@@ -84,6 +101,7 @@ public class PlantService {
         this.eventRepository = eventRepository;
         this.deviceJpaReposity = deviceJpaReposity;
         this.mqttService = mqttService;
+        this.gatewayProperties = gatewayProperties;
     }
 
     public String resolveDeviceKey(String deviceKey) {
@@ -101,6 +119,7 @@ public class PlantService {
             p.setDeviceKey(key);
             p.setDisplayName("未来植物控制器");
             p.setFirmwareVersion("mock-1.0");
+            // 新建画像默认跟随 plant.mock.enabled（默认为 false = 实机）
             p.setMockEnabled(mockEnabledByDefault);
             p.setConfigJson(defaultConfigJson());
             Date now = new Date();
@@ -114,6 +133,29 @@ public class PlantService {
     public Map<String, Object> applyLedAllChannels(String deviceKey, int brightness, String reason) throws IOException {
         String key = resolveDeviceKey(deviceKey);
         int b = Math.max(0, Math.min(100, brightness));
+        // 真机：统一亮度走网关广播（四台驱动器 ch1/ch2 同值）
+        if (gatewayProperties.getLed().isEnabled() && ledHardwareService != null) {
+            int level = (int) Math.round(b * 255.0 / 100.0);
+            Map<String, Object> req = new LinkedHashMap<>();
+            req.put("rackKey", gatewayProperties.getLed().getRackKey());
+            req.put("ch1", level);
+            req.put("ch2", level);
+            if (reason != null) {
+                req.put("reason", reason);
+            }
+            Map<String, Object> result = ledHardwareService.broadcastSet(req);
+            // 同步看板 actuator 乐观状态
+            for (int i = 1; i <= 8; i++) {
+                Map<String, Object> state = new LinkedHashMap<>();
+                state.put("actuatorId", "led.ch" + i);
+                state.put("brightness", (double) b);
+                state.put("on", b > 0);
+                upsertActuator(key, "led.ch" + i, state, "LED_GATEWAY");
+            }
+            result.put("via", "led-gateway-broadcast");
+            result.put("deviceKey", key);
+            return result;
+        }
         List<Map<String, Object>> channels = new ArrayList<>();
         for (int i = 1; i <= 8; i++) {
             Map<String, Object> ch = new LinkedHashMap<>();
@@ -149,6 +191,12 @@ public class PlantService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("deviceKey", key);
         result.put("displayName", profile.getDisplayName());
+        // 摄像头网关联调时自动关 Mock，避免页面仍显示 Mock / 假图
+        if (gatewayProperties.getCamera().isEnabled() && Boolean.TRUE.equals(profile.getMockEnabled())) {
+            profile.setMockEnabled(false);
+            profile.setUpdatedAt(new Date());
+            profileRepository.save(profile);
+        }
         result.put("mockEnabled", Boolean.TRUE.equals(profile.getMockEnabled()));
         result.put("online", isOnline(key) || useMock);
         result.put("onlineSource", useMock ? "MOCK" : "HEARTBEAT");
@@ -400,11 +448,39 @@ public class PlantService {
     @Transactional
     public Map<String, Object> issueCommand(Map<String, Object> body) throws IOException {
         String deviceKey = resolveDeviceKey(asString(body.get("deviceKey")));
-        ensureProfile(deviceKey);
+        PlantDeviceProfile profile = ensureProfile(deviceKey);
+        // 摄像头网关开启时强制关闭 Mock，避免仍生成玉米样例图
+        if (gatewayProperties.getCamera().isEnabled() && Boolean.TRUE.equals(profile.getMockEnabled())) {
+            profile.setMockEnabled(false);
+            profile.setUpdatedAt(new Date());
+            profileRepository.save(profile);
+        }
         String commandType = asString(body.get("commandType"));
         if (commandType == null || commandType.trim().isEmpty()) {
             throw new IllegalArgumentException("commandType 不能为空");
         }
+
+        // 旧前端「立即抓拍 / 云台」走 commands：网关开启时直接转真实摄像头接口
+        if (gatewayProperties.getCamera().isEnabled() && cameraHardwareService != null) {
+            if ("CAMERA_CAPTURE".equals(commandType.trim())) {
+                Map<String, Object> captured = cameraHardwareService.capturePhoto(deviceKey);
+                captured.put("via", "camera-gateway");
+                return captured;
+            }
+            if ("GIMBAL_MOVE".equals(commandType.trim())) {
+                Map<String, Object> moveBody = new LinkedHashMap<>();
+                moveBody.put("deviceKey", deviceKey);
+                if (body.get("payload") instanceof Map) {
+                    moveBody.putAll((Map<String, Object>) body.get("payload"));
+                }
+                Object action = moveBody.get("action");
+                if (action != null && "STOP".equalsIgnoreCase(String.valueOf(action))) {
+                    return cameraHardwareService.ptzStop(deviceKey);
+                }
+                return cameraHardwareService.ptzMove(moveBody);
+            }
+        }
+
         String clientRequestId = asString(body.get("clientRequestId"));
         if (clientRequestId != null && !clientRequestId.isEmpty()) {
             Optional<PlantCommandLog> existing = commandRepository.findByClientRequestId(clientRequestId);
@@ -444,12 +520,13 @@ public class PlantService {
         Date now = new Date();
         if (!mock) {
             sent = mqttService.publishPlantCommand(deviceKey, json);
-            log.setStatus(sent ? "SENT" : "FAILED");
             if (sent) {
+                log.setStatus("SENT");
                 log.setSentAt(now);
             } else {
-                log.setResultMessage("MQTT 发送失败或未启用");
-                log.setFinishedAt(now);
+                // MQTT 未开时保留 PENDING，供边缘 HTTP 轮询 /commands/pending
+                log.setStatus("PENDING");
+                log.setResultMessage("waiting edge poll (MQTT off or publish failed)");
             }
         } else {
             // mock: auto ACK
@@ -471,6 +548,116 @@ public class PlantService {
         PlantCommandLog log = commandRepository.findById(commandId)
                 .orElseThrow(() -> new IllegalArgumentException("指令不存在: " + commandId));
         return toCommandMap(log);
+    }
+
+    /**
+     * 边缘轮询待执行指令；取走后标记 SENT。
+     */
+    @Transactional
+    public List<Map<String, Object>> pollPendingCommands(String deviceKey, int limit) {
+        String key = resolveDeviceKey(deviceKey);
+        int size = Math.max(1, Math.min(limit, 50));
+        List<PlantCommandLog> list = commandRepository.findByDeviceKeyAndStatusOrderByCreatedAtAsc(
+                key, "PENDING", PageRequest.of(0, size));
+        Date now = new Date();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (PlantCommandLog log : list) {
+            log.setStatus("SENT");
+            log.setSentAt(now);
+            log.setResultMessage("delivered via HTTP pending poll");
+            commandRepository.save(log);
+            Map<String, Object> item = toCommandMap(log);
+            try {
+                if (log.getPayloadJson() != null) {
+                    item.put("payload", objectMapper.readValue(log.getPayloadJson(), Object.class));
+                }
+            } catch (Exception ignore) {
+                item.put("payload", Collections.emptyMap());
+            }
+            out.add(item);
+        }
+        return out;
+    }
+
+    /**
+     * 边缘拉取采集策略（SAMPLE_INTERVAL）。
+     */
+    @Transactional
+    public Map<String, Object> getSampleStrategy(String deviceKey) {
+        String key = resolveDeviceKey(deviceKey);
+        PlantDeviceProfile profile = ensureProfile(key);
+        int intervalSec = 15;
+        boolean enabled = true;
+        List<String> metrics = Arrays.asList("air.temperature", "air.humidity", "nutrient.ph");
+        try {
+            if (profile.getConfigJson() != null && !profile.getConfigJson().trim().isEmpty()) {
+                Map<String, Object> cfg = objectMapper.readValue(profile.getConfigJson(),
+                        new TypeReference<Map<String, Object>>() {});
+                if (cfg.get("sampleIntervalSec") != null) {
+                    intervalSec = Integer.parseInt(String.valueOf(cfg.get("sampleIntervalSec")));
+                }
+                if (cfg.get("sampleEnabled") != null) {
+                    enabled = Boolean.parseBoolean(String.valueOf(cfg.get("sampleEnabled")));
+                }
+                if (cfg.get("metrics") instanceof List) {
+                    List<String> m = new ArrayList<>();
+                    for (Object o : (List<?>) cfg.get("metrics")) {
+                        if (o != null) {
+                            m.add(String.valueOf(o));
+                        }
+                    }
+                    if (!m.isEmpty()) {
+                        metrics = m;
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+            // keep defaults
+        }
+        Map<String, Object> config = new LinkedHashMap<>();
+        config.put("intervalSec", intervalSec);
+        config.put("metrics", metrics);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("deviceKey", key);
+        out.put("strategyType", "SAMPLE_INTERVAL");
+        out.put("target", "sensor");
+        out.put("enabled", enabled);
+        out.put("name", "默认环境采集");
+        out.put("config", config);
+        out.put("updatedAt", profile.getUpdatedAt());
+        return out;
+    }
+
+    @Transactional
+    public Map<String, Object> saveSampleStrategy(Map<String, Object> body) {
+        String key = resolveDeviceKey(asString(body.get("deviceKey")));
+        PlantDeviceProfile profile = ensureProfile(key);
+        Map<String, Object> cfg = new LinkedHashMap<>();
+        try {
+            if (profile.getConfigJson() != null && !profile.getConfigJson().trim().isEmpty()) {
+                cfg.putAll(objectMapper.readValue(profile.getConfigJson(),
+                        new TypeReference<Map<String, Object>>() {}));
+            }
+        } catch (Exception ignore) {
+            cfg = new LinkedHashMap<>();
+        }
+        if (body.get("intervalSec") != null) {
+            cfg.put("sampleIntervalSec", Integer.parseInt(String.valueOf(body.get("intervalSec"))));
+        }
+        if (body.get("enabled") != null) {
+            cfg.put("sampleEnabled", Boolean.parseBoolean(String.valueOf(body.get("enabled"))));
+        }
+        if (body.get("metrics") instanceof List) {
+            cfg.put("metrics", body.get("metrics"));
+        }
+        try {
+            profile.setConfigJson(objectMapper.writeValueAsString(cfg));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("保存策略失败");
+        }
+        profile.setUpdatedAt(new Date());
+        profileRepository.save(profile);
+        return getSampleStrategy(key);
     }
 
     public List<Map<String, Object>> queryMetrics(String deviceKey, String metric, Date from, Date to, int limit) {
@@ -504,7 +691,12 @@ public class PlantService {
 
     public List<Map<String, Object>> listMedia(String deviceKey, int limit) {
         String key = resolveDeviceKey(deviceKey);
-        ensureSampleMedia(key);
+        // 仅 Mock 时补样例图；实机媒体库勿再塞玉米样例
+        PlantDeviceProfile profile = ensureProfile(key);
+        if (Boolean.TRUE.equals(profile.getMockEnabled())
+                && !gatewayProperties.getCamera().isEnabled()) {
+            ensureSampleMedia(key);
+        }
         List<PlantMediaAsset> list = mediaRepository.findByDeviceKeyOrderByCapturedAtDesc(
                 key, PageRequest.of(0, Math.max(1, limit)));
         List<Map<String, Object>> out = new ArrayList<>();
@@ -513,14 +705,46 @@ public class PlantService {
             m.put("id", a.getId());
             m.put("deviceKey", a.getDeviceKey());
             m.put("mediaType", a.getMediaType());
-            boolean hasFile = a.getStoragePath() != null && !a.getStoragePath().trim().isEmpty()
-                    && Files.exists(Paths.get(a.getStoragePath()));
-            m.put("url", hasFile
-                    ? ("/plant/api/media/" + a.getId() + "/file")
-                    : "/static/images/plant/corn_plant_sample.png");
+            String path = a.getStoragePath();
+            boolean hasLocalFile = path != null && !path.trim().isEmpty() && Files.exists(Paths.get(path));
+            m.put("hasLocalFile", hasLocalFile);
+            m.put("storagePath", path);
+            m.put("url", hasLocalFile ? ("/plant/api/media/" + a.getId() + "/file") : null);
             m.put("capturedAt", a.getCapturedAt());
             m.put("metaJson", a.getMetaJson());
-            m.put("label", "玉米植株样例");
+            String label = "Media #" + a.getId();
+            String remotePath = null;
+            boolean sample = false;
+            try {
+                if (a.getMetaJson() != null && !a.getMetaJson().trim().isEmpty()) {
+                    Map<String, Object> meta = objectMapper.readValue(a.getMetaJson(),
+                            new TypeReference<Map<String, Object>>() {});
+                    if (meta.get("label") != null) {
+                        label = String.valueOf(meta.get("label"));
+                    }
+                    if (meta.get("remotePath") != null) {
+                        remotePath = String.valueOf(meta.get("remotePath"));
+                    } else if (meta.get("file") != null) {
+                        remotePath = String.valueOf(meta.get("file"));
+                    }
+                    sample = Boolean.TRUE.equals(meta.get("sample"));
+                }
+            } catch (Exception ignore) {
+                // keep defaults
+            }
+            if (sample) {
+                label = "玉米植株样例";
+                if (!hasLocalFile) {
+                    m.put("url", "/static/images/plant/corn_plant_sample.png");
+                }
+            } else if (!hasLocalFile && "VIDEO".equalsIgnoreCase(a.getMediaType())) {
+                label = label == null || label.startsWith("Media #") ? "录像（待拉取）" : label;
+            } else if (hasLocalFile && "VIDEO".equalsIgnoreCase(a.getMediaType())
+                    && (label == null || label.startsWith("Media #"))) {
+                label = "网关录像";
+            }
+            m.put("label", label);
+            m.put("remotePath", remotePath);
             out.add(m);
         }
         return out;
@@ -769,7 +993,12 @@ public class PlantService {
                 upsertActuator(deviceKey, actuatorId, state, "COMMAND_OPTIMISTIC");
             }
         } else if ("CAMERA_CAPTURE".equals(commandType)) {
-            createSampleCapture(deviceKey, payload);
+            // 仅 Mock 且未开摄像头网关时造样例图；实机模式不再写假照片
+            PlantDeviceProfile profile = ensureProfile(deviceKey);
+            if (Boolean.TRUE.equals(profile.getMockEnabled())
+                    && !gatewayProperties.getCamera().isEnabled()) {
+                createSampleCapture(deviceKey, payload);
+            }
         }
     }
 

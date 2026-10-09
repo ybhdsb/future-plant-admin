@@ -32,7 +32,7 @@ public class PlantDeviceProfile {
     private String configJson;
 
     @Column(name = "mock_enabled")
-    private Boolean mockEnabled = true;
+    private Boolean mockEnabled = false;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", columnDefinition = "DATETIME(3)")

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { CornPlant3D } from './corn3d.js'
+import { canUseWebGL, createCornPlantThree, type CornPlantView } from './CornPlantThree'
 
 const props = defineProps<{
   specimen: Record<string, any>
@@ -9,18 +10,33 @@ const props = defineProps<{
 const emit = defineEmits<{ select: [specimen: Record<string, any>] }>()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-let view: any = null
+const mode = ref<'three' | 'canvas'>('canvas')
+let view: CornPlantView | null = null
 
-onMounted(() => {
+onMounted(async () => {
   if (!canvasRef.value) return
-  view = CornPlant3D.create(canvasRef.value, props.specimen)
-  view.onSelect = (sp: any) => emit('select', sp)
+  // Wait one frame so layout has real width/height before first render
+  await new Promise<void>((r) => requestAnimationFrame(() => r()))
+  if (!canvasRef.value) return
+  if (canUseWebGL()) {
+    try {
+      view = createCornPlantThree(canvasRef.value, props.specimen)
+      mode.value = 'three'
+      view.onSelect = (sp) => emit('select', sp)
+      return
+    } catch (e) {
+      console.error('[CornPlantCard] Three.js init failed, fallback canvas', e)
+    }
+  }
+  view = CornPlant3D.create(canvasRef.value, props.specimen) as CornPlantView
+  mode.value = 'canvas'
+  view.onSelect = (sp) => emit('select', sp)
 })
 
 watch(
   () => props.specimen,
   (sp) => {
-    if (view) view.setSpecimen(sp)
+    view?.setSpecimen(sp)
   },
   { deep: true },
 )
@@ -34,72 +50,99 @@ onBeforeUnmount(() => {
 <template>
   <div class="slot" :class="{ active }">
     <div class="stage">
+      <div class="glow" aria-hidden="true" />
       <canvas ref="canvasRef" />
-      <div class="hint">← 拖动旋转 →</div>
+      <div class="hint">拖转旋转 · 点击选中</div>
     </div>
     <button class="tag" type="button" @click="emit('select', specimen)">
-      {{ specimen.plantCode }} · {{ specimen.slotCode || '' }}
+      <span class="code">{{ specimen.plantCode }}</span>
+      <span class="slot-id">{{ specimen.slotCode || '—' }}</span>
     </button>
+    <div v-if="mode === 'canvas'" class="warn">3D 渲染不可用，当前为简化预览</div>
   </div>
 </template>
 
 <style scoped>
 .slot {
   text-align: center;
-  transition: transform 0.18s ease;
-}
-.slot:hover,
-.slot.active {
-  transform: translateY(-4px);
 }
 .stage {
   position: relative;
-  height: 236px;
+  height: 280px;
   margin: 0 auto;
-  max-width: 158px;
-  border-radius: 16px;
-  background:
-    radial-gradient(ellipse at 50% 100%, rgba(255, 255, 255, 0.4), transparent 55%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+  max-width: 200px;
+  border-radius: var(--fp-radius-lg);
+  background: linear-gradient(180deg, #fafbfa 0%, #eef2ef 100%);
   overflow: hidden;
+  border: 1px solid var(--fp-line);
 }
 .slot.active .stage {
-  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.5), 0 14px 26px rgba(13, 148, 136, 0.2);
+  border-color: rgba(10, 122, 110, 0.35);
+  box-shadow: 0 0 0 1px rgba(10, 122, 110, 0.12);
+}
+.glow {
+  display: none;
 }
 canvas {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   touch-action: none;
   cursor: grab;
 }
+canvas:active {
+  cursor: grabbing;
+}
 .hint {
   position: absolute;
+  z-index: 2;
   left: 50%;
-  bottom: 6px;
+  bottom: 10px;
   transform: translateX(-50%);
   font-size: 10px;
-  color: rgba(20, 53, 47, 0.42);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--fp-muted);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.55);
-  padding: 1px 7px;
-  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--fp-line);
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-family: var(--fp-mono);
 }
 .slot:hover .hint {
   opacity: 1;
 }
 .tag {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid #cfe8e1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: var(--fp-bg-elev);
+  border: 1px solid var(--fp-line);
+  font-size: 12px;
+}
+.code {
+  font-weight: 600;
+  color: var(--fp-ink);
+  letter-spacing: -0.02em;
+}
+.slot-id {
+  font-weight: 500;
+  color: var(--fp-faint);
   font-size: 11px;
-  font-weight: 700;
-  color: #0f766e;
+  font-family: var(--fp-mono);
+}
+.warn {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--fp-warn);
 }
 </style>

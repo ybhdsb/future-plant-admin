@@ -1,11 +1,11 @@
-/** Shared ECharts look — product-native, not default ECharts. */
-export const FP_CHART_COLORS = ['#0a7a6e', '#0369a1', '#b45309', '#475569']
+/** Light content chart theme */
+export const FP_CHART_COLORS = ['#0a7a6e', '#0369a1', '#b45309', '#64748b']
 
 export function fpChartBase(overrides: Record<string, unknown> = {}) {
   return {
     color: FP_CHART_COLORS,
     textStyle: {
-      fontFamily: 'Sora, PingFang SC, sans-serif',
+      fontFamily: 'Space Grotesk, PingFang SC, sans-serif',
       color: '#5a6f68',
     },
     tooltip: {
@@ -21,25 +21,25 @@ export function fpChartBase(overrides: Record<string, unknown> = {}) {
     },
     legend: {
       top: 0,
-      icon: 'circle',
-      itemWidth: 8,
-      itemHeight: 8,
-      textStyle: { color: '#5a6f68', fontSize: 12 },
+      icon: 'roundRect',
+      itemWidth: 10,
+      itemHeight: 3,
+      textStyle: { color: '#5a6f68', fontSize: 11 },
     },
-    grid: { left: 44, right: 12, top: 36, bottom: 28 },
+    grid: { left: 42, right: 12, top: 36, bottom: 26 },
     xAxis: {
       type: 'time',
-      axisLabel: { color: '#8b9e96', fontSize: 11 },
+      axisLabel: { color: '#8b9e96', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' },
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: '#8b9e96', fontSize: 11 },
+      axisLabel: { color: '#8b9e96', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: 'rgba(18, 45, 38, 0.06)', type: 'dashed' } },
+      splitLine: { lineStyle: { color: 'rgba(18, 45, 38, 0.06)', type: 'solid', width: 1 } },
     },
     ...overrides,
   }

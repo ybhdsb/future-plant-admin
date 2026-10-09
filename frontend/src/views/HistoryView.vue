@@ -171,25 +171,25 @@ onMounted(() => {
 
 <style scoped>
 .pill {
-  height: 32px; padding: 0 12px; border-radius: 999px; display: inline-flex; align-items: center;
-  border: 1px solid var(--fp-line); background: #fff; font-size: 12px; font-weight: 700; color: var(--fp-muted);
+  height: 28px; padding: 0 10px; border-radius: var(--fp-radius-sm); display: inline-flex; align-items: center;
+  border: 1px solid var(--fp-line-strong); background: var(--fp-bg-elev); font-size: 11.5px; font-weight: 500; color: var(--fp-muted);
 }
 .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
 .filters label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--fp-muted); }
 .filters input[type='datetime-local'] {
-  height: 36px; border-radius: 10px; border: 1px solid var(--fp-line); padding: 0 10px; background: #fff;
+  height: 36px; border-radius: 10px; border: 1px solid var(--fp-line); padding: 0 10px; background: var(--fp-bg-elev);
 }
 .checks { display: flex; flex-wrap: wrap; gap: 10px; }
 .ck { display: inline-flex !important; align-items: center; gap: 6px; font-weight: 600 !important; }
 .table-wrap { overflow: auto; max-height: 360px; }
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
 th, td { padding: 8px 12px; border-bottom: 1px solid var(--fp-line); text-align: left; }
-th { background: #f7fbf9; color: var(--fp-muted); }
+th { background: var(--fp-bg-soft); color: var(--fp-faint); font-weight: 500; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .card {
-  border: 1px solid var(--fp-line); border-radius: 12px; overflow: hidden; background: #fff; color: inherit;
+  border: 1px solid var(--fp-line); border-radius: 12px; overflow: hidden; background: var(--fp-bg-elev); color: inherit;
 }
-.card img { width: 100%; height: 90px; object-fit: cover; background: #ecfdf5; display: block; }
+.card img { width: 100%; height: 90px; object-fit: cover; background: rgba(46, 196, 167, 0.08); display: block; }
 .bd { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 11px; }
 .bd span { color: var(--fp-faint); }
 .empty { color: var(--fp-faint); font-size: 13px; text-align: center; }

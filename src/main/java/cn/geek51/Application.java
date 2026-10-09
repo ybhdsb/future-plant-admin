@@ -31,6 +31,10 @@ public class Application extends WebMvcConfigurationSupport {
                 // 手机扫码加入与 HTTP 心跳（无需后台登录）
                 "/device/join", "/device/join/**",
                 "/device/api/join", "/device/api/invite/**", "/device/api/heartbeat",
+                // 边缘遥测 / 取指令 / 拉策略（无需后台登录）
+                "/plant/api/telemetry",
+                "/plant/api/commands/pending",
+                "/plant/api/strategy",
                 // 联邦服务器/客户端下载模型与数据集（实验室内网）
                 "/library/files/**"
         );
